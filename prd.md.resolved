@@ -1,0 +1,520 @@
+# 📘 Product Requirements Document (PRD)
+# HelPhin — Learning Management System
+
+| Field | Detail |
+|---|---|
+| **Nama Produk** | HelPhin |
+| **Tipe** | Web-based Learning Management System (LMS) |
+| **Target Pengguna** | Mahasiswa/i (sebagai Student) dan Himpunan Mahasiswa (sebagai Admin) |
+| **Tech Stack** | Next.js (Frontend) · ElysiaJS (Backend) · PostgreSQL (Database) |
+| **Tanggal Dokumen** | 23 Februari 2026 |
+| **Versi** | 1.0 |
+
+---
+
+## 1. Ringkasan Produk
+
+HelPhin adalah platform LMS berbasis web yang dirancang untuk mendukung kegiatan akademik di lingkungan himpunan mahasiswa. Sistem ini memfasilitasi distribusi materi pembelajaran, pengelolaan video responsi (rekaman & live), serta latihan soal — semuanya dalam satu platform terpusat dengan kontrol akses berbasis peran.
+
+---
+
+## 2. Tujuan & Sasaran
+
+| Tujuan | Deskripsi |
+|---|---|
+| **Sentralisasi Materi** | Menyediakan satu platform terpusat untuk seluruh materi akademik himpunan |
+| **Kontrol Akses Video** | Memastikan video responsi hanya dapat diakses melalui HelPhin, bukan langsung via YouTube |
+| **Manajemen Multi-Prodi** | Mendukung pengelolaan konten terpisah per prodi/himpunan dengan visibilitas lintas prodi |
+| **Monitoring Aktivitas** | Memungkinkan Super Admin memantau seluruh aktivitas pengguna melalui log activity |
+
+---
+
+## 3. Arsitektur Peran Pengguna
+
+```mermaid
+graph TD
+    SA["🔑 Super Admin"] --> A1["👤 Admin Himpunan Prodi A"]
+    SA --> A2["👤 Admin Himpunan Prodi B"]
+    SA --> AN["👤 Admin Himpunan Prodi N"]
+    A1 --> S1["🎓 Student Prodi A"]
+    A2 --> S2["🎓 Student Prodi B"]
+    AN --> SN["🎓 Student Prodi N"]
+    S1 -.->|Akses Materi| A2
+    S1 -.->|Akses Materi| AN
+    S2 -.->|Akses Materi| A1
+```
+
+### 3.1 Super Admin
+
+| Aspek | Detail |
+|---|---|
+| **Pembuatan Akun** | Dibuat secara manual (hardcoded/seeder) |
+| **Hak Akses** | Penuh terhadap seluruh sistem |
+
+**Kapabilitas:**
+- Membuat, mengedit, dan menghapus akun Admin
+- Mengakses seluruh data lintas prodi/himpunan
+- Melihat dan mengelola seluruh materi, video, dan responsi dari semua prodi
+- Memantau **Log Activity** seluruh pengguna (login, upload, edit, delete, dll.)
+- Mengelola konfigurasi sistem secara global
+
+### 3.2 Admin (Himpunan / Prodi)
+
+| Aspek | Detail |
+|---|---|
+| **Pembuatan Akun** | Dibuat oleh Super Admin |
+| **Scope** | Terbatas pada prodi/himpunan yang ditugaskan |
+
+**Kapabilitas:**
+- **CRUD penuh** untuk materi di lingkup prodi sendiri (upload, edit, hapus)
+- **CRUD penuh** untuk video responsi di lingkup prodi sendiri
+- **CRUD penuh** untuk informasi & jadwal responsi di lingkup prodi sendiri
+- **Read-only** terhadap materi prodi lain (dapat melihat, tidak dapat mengedit/menghapus)
+- Mengelola latihan soal (link Google Form) di lingkup prodi sendiri
+- Mengelola request materi dari student
+
+### 3.3 Student (Mahasiswa/i)
+
+| Aspek | Detail |
+|---|---|
+| **Pembuatan Akun** | Registrasi mandiri / dibuat oleh Admin |
+| **Scope** | Akses materi prodi sendiri **dan** prodi lain (lintas prodi) |
+
+**Kapabilitas:**
+- Masuk ke menu **prodi masing-masing**, melihat daftar **mata kuliah**
+- Klik mata kuliah (misal: Kalkulus) → menampilkan materi dari **berbagai tahun ajaran** dengan filter
+- Mengakses materi dari **prodi lain** melalui menu eksplorasi lintas prodi
+- Mengakses dan mengunduh materi pembelajaran (PDF, Excel, dokumen lainnya)
+- Menonton video rekaman responsi melalui HelPhin
+- Mengikuti responsi live melalui embedded YouTube stream di HelPhin
+- Mengajukan **request/saran materi** yang belum tersedia (one-way submission)
+- Mengakses latihan soal melalui tombol redirect ke Google Form
+- Melihat jadwal dan informasi responsi
+
+---
+
+## 4. Fitur Utama
+
+### 4.1 Manajemen Materi Pembelajaran
+
+| Item | Detail |
+|---|---|
+| **Format Didukung** | PDF, Excel (xlsx/xls), Word (docx/doc), PowerPoint (pptx/ppt), dan dokumen lainnya |
+| **Organisasi** | Hierarki: **Prodi → Mata Kuliah → Tahun Ajaran** |
+| **Aksi** | Upload, preview, download, edit metadata, hapus |
+
+**Navigasi Materi (Student):**
+
+```mermaid
+flowchart LR
+    A["Pilih Prodi"] --> B["Daftar Mata Kuliah"]
+    B --> C["Pilih Mata Kuliah (misal: Kalkulus)"]
+    C --> D["Filter Tahun Ajaran"]
+    D --> E["Daftar Materi, Video, Latihan Soal"]
+```
+
+**Spesifikasi:**
+- Admin dapat meng-upload file dengan metadata (judul, deskripsi, **mata kuliah, tahun ajaran**, prodi)
+- Student masuk ke menu prodi → melihat daftar mata kuliah → pilih mata kuliah → lihat materi per tahun ajaran
+- Student **dapat mengakses materi dari prodi lain** (read-only, lintas prodi)
+- Filter berdasarkan tahun ajaran untuk menampilkan materi yang relevan
+- Materi dikelompokkan per prodi, dengan badge penanda prodi asal
+- Terdapat fitur pencarian dan filter
+
+### 4.2 Video Responsi (Rekaman & Live)
+
+> [!IMPORTANT]
+> Seluruh video **hanya dapat ditonton dari dalam HelPhin**. Pengguna tidak dapat mengakses video secara langsung melalui YouTube. Kontrol akses dilakukan di level aplikasi.
+
+| Item | Detail |
+|---|---|
+| **Sumber Video** | YouTube (link embed) |
+| **Tipe** | Rekaman responsi & Live streaming responsi |
+| **Akses** | Embedded player di dalam HelPhin, akses dikontrol oleh sistem |
+
+**Mekanisme Kontrol Akses Video:**
+1. Video di-upload ke YouTube sebagai **Unlisted** (tidak terindeks publik)
+2. Admin menginput link YouTube ke HelPhin
+3. HelPhin meng-embed video menggunakan YouTube iframe API
+4. Link asli YouTube **tidak diekspos** ke user — hanya embedded player yang ditampilkan
+5. Referrer restrictions dan domain locking dapat diterapkan pada YouTube API key
+
+**Flow:**
+
+```mermaid
+flowchart LR
+    A[Admin Upload Link YouTube] --> B[HelPhin Simpan & Embed]
+    B --> C[Student Tonton via HelPhin Player]
+    C -.->|❌ Blocked| D[YouTube Langsung]
+```
+
+### 4.3 Responsi (Informasi & Jadwal)
+
+| Item | Detail |
+|---|---|
+| **Informasi** | Judul, deskripsi, pemateri, topik |
+| **Jadwal** | Tanggal, waktu mulai, durasi, link live (jika ada) |
+| **Status** | Upcoming, Live, Completed |
+
+**Spesifikasi:**
+- Admin dapat membuat jadwal responsi dengan detail lengkap
+- Student dapat melihat daftar responsi yang akan datang, sedang berlangsung, dan telah selesai
+- Notifikasi atau badge untuk responsi yang akan segera dimulai
+- Setelah selesai, Admin dapat menambahkan link rekaman video
+
+### 4.4 Request / Saran Materi
+
+| Item | Detail |
+|---|---|
+| **Pengaju** | Student |
+| **Pengelola** | Admin prodi terkait |
+| **Sifat** | One-way submission — Student mengirim saran, selanjutnya menjadi kebijakan Admin |
+
+**Flow:**
+
+```mermaid
+flowchart LR
+    S["Student Submit Saran"] --> N["Notif: Saran akan dipertimbangkan"]
+    S --> A["Data Masuk ke Admin"]
+    A --> K{"Kebijakan Admin"}
+```
+
+**Spesifikasi:**
+- Student mengisi form saran/request materi (judul, mata kuliah, deskripsi kebutuhan)
+- Setelah submit, Student menerima **notifikasi bahwa saran akan dipertimbangkan** — proses Student selesai
+- Data request masuk ke dashboard Admin sebagai daftar saran dari student
+- Admin mempertimbangkan saran dan **bebas memutuskan** untuk menerima atau tidak
+- Tidak ada status tracking untuk Student (bukan workflow approval)
+
+### 4.5 Latihan Soal
+
+| Item | Detail |
+|---|---|
+| **Platform** | Google Form (external) |
+| **Integrasi** | Tombol/link redirect dari HelPhin ke Google Form |
+| **Pengelola** | Admin |
+
+**Spesifikasi:**
+- Admin menambahkan entri latihan soal dengan metadata (judul, mata kuliah, deskripsi)
+- Setiap entri memiliki tombol yang mengarahkan student ke Google Form
+- Link dibuka di tab baru
+
+### 4.6 Log Activity (Super Admin)
+
+| Item | Detail |
+|---|---|
+| **Akses** | Khusus Super Admin |
+| **Cakupan** | Seluruh aktivitas pengguna di sistem |
+
+**Aktivitas yang Di-log:**
+
+| Kategori | Contoh Aksi |
+|---|---|
+| **Autentikasi** | Login, logout |
+| **Materi** | Upload, edit, delete, download |
+| **Video** | Tambah link, edit, delete, tonton |
+| **Responsi** | Buat jadwal, edit, delete |
+| **Request** | Submit, approve, reject, fulfill |
+| **User Management** | Buat admin, edit, nonaktifkan |
+
+**Informasi per Log Entry:**
+- Timestamp
+- User (nama, role, prodi)
+- Aksi yang dilakukan
+- Detail perubahan (jika ada)
+- IP Address
+
+---
+
+## 5. Halaman & Navigasi
+
+### 5.1 Halaman Publik
+
+| Halaman | Deskripsi |
+|---|---|
+| **Login** | Form login untuk semua role |
+| **Register** | Form registrasi untuk Student |
+
+### 5.2 Halaman Student
+
+| Halaman | Deskripsi |
+|---|---|
+| **Dashboard** | Overview materi terbaru, jadwal responsi terdekat, status request |
+| **Materi** | Daftar materi dengan search & filter, preview & download |
+| **Video Responsi** | Daftar video rekaman dengan embedded player |
+| **Jadwal Responsi** | Kalender/list responsi upcoming & live |
+| **Latihan Soal** | Daftar latihan soal dengan tombol ke Google Form |
+| **Request Materi** | Form pengajuan & daftar request + statusnya |
+
+### 5.3 Halaman Admin
+
+| Halaman | Deskripsi |
+|---|---|
+| **Dashboard** | Statistik konten prodi, request pending, jadwal terdekat |
+| **Manajemen Materi** | CRUD materi prodi sendiri + view materi prodi lain |
+| **Manajemen Video** | CRUD video responsi prodi sendiri |
+| **Manajemen Responsi** | CRUD jadwal & info responsi |
+| **Manajemen Latihan Soal** | CRUD link Google Form |
+| **Request Materi** | Daftar request dari student + aksi approve/reject |
+
+### 5.4 Halaman Super Admin
+
+| Halaman | Deskripsi |
+|---|---|
+| **Dashboard** | **Total Student**, **Total Course**, **Total Prodi**; List **Fakultas Teraktif** (berdasarkan aktivitas prodi di fakultas tersebut); List **Mahasiswa Teraktif** |
+| **Manajemen Admin** | CRUD akun admin dengan assignment prodi |
+| **Seluruh Fitur Admin** | Akses penuh ke semua fitur admin untuk semua prodi |
+| **Log Activity** | Tabel log dengan filter & search (by user, aksi, tanggal, prodi) |
+
+---
+
+## 6. Data Model (High-Level)
+
+```mermaid
+erDiagram
+    USER {
+        uuid id PK
+        string name
+        string email
+        string password_hash
+        enum role "super_admin | admin | student"
+        uuid prodi_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    FAKULTAS {
+        uuid id PK
+        string name
+        timestamp created_at
+    }
+
+    PRODI {
+        uuid id PK
+        string name
+        string description
+        uuid fakultas_id FK
+        timestamp created_at
+    }
+
+    MATA_KULIAH {
+        uuid id PK
+        string name
+        string code
+        uuid prodi_id FK
+        timestamp created_at
+    }
+
+    MATERIAL {
+        uuid id PK
+        string title
+        string description
+        string file_url
+        string file_type
+        string tahun_ajaran
+        uuid mata_kuliah_id FK
+        uuid prodi_id FK
+        uuid uploaded_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    VIDEO {
+        uuid id PK
+        string title
+        string description
+        string youtube_url
+        enum type "recording | live"
+        uuid prodi_id FK
+        uuid uploaded_by FK
+        timestamp created_at
+    }
+
+    RESPONSI {
+        uuid id PK
+        string title
+        string description
+        string speaker
+        string topic
+        datetime schedule_date
+        int duration_minutes
+        enum status "upcoming | live | completed"
+        uuid video_id FK
+        uuid prodi_id FK
+        uuid created_by FK
+        timestamp created_at
+    }
+
+    MATERIAL_REQUEST {
+        uuid id PK
+        string title
+        string subject
+        string description
+        uuid student_id FK
+        uuid prodi_id FK
+        timestamp created_at
+    }
+
+    EXERCISE {
+        uuid id PK
+        string title
+        string subject
+        string description
+        string google_form_url
+        uuid prodi_id FK
+        uuid created_by FK
+        timestamp created_at
+    }
+
+    ACTIVITY_LOG {
+        uuid id PK
+        uuid user_id FK
+        string action
+        string entity_type
+        uuid entity_id
+        jsonb details
+        string ip_address
+        timestamp created_at
+    }
+
+    FAKULTAS ||--o{ PRODI : "has"
+    PRODI ||--o{ USER : "belongs to"
+    PRODI ||--o{ MATA_KULIAH : "has"
+    MATA_KULIAH ||--o{ MATERIAL : "has"
+    PRODI ||--o{ VIDEO : "has"
+    PRODI ||--o{ RESPONSI : "has"
+    PRODI ||--o{ MATERIAL_REQUEST : "receives"
+    PRODI ||--o{ EXERCISE : "has"
+    USER ||--o{ MATERIAL : "uploads"
+    USER ||--o{ VIDEO : "uploads"
+    USER ||--o{ RESPONSI : "creates"
+    USER ||--o{ MATERIAL_REQUEST : "submits"
+    USER ||--o{ EXERCISE : "creates"
+    USER ||--o{ ACTIVITY_LOG : "generates"
+    VIDEO ||--o| RESPONSI : "linked to"
+```
+
+---
+
+## 7. Tech Stack & Arsitektur
+
+### 7.1 Stack Overview
+
+| Layer | Teknologi | Keterangan |
+|---|---|---|
+| **Frontend** | Next.js (App Router) | SSR/CSR, React-based |
+| **Backend** | ElysiaJS (Bun runtime) | REST API, type-safe |
+| **Database** | PostgreSQL | Relational, ACID-compliant |
+| **ORM** | Drizzle ORM / Prisma | Type-safe query builder |
+| **Auth** | JWT (Access + Refresh Token) | Stateless authentication |
+| **File Storage** | Local / Cloud (S3/Supabase Storage) | Untuk materi PDF/Excel/dll |
+| **Video** | YouTube iFrame API | Embedded player, unlisted videos |
+
+### 7.2 Arsitektur Sistem
+
+```mermaid
+flowchart TB
+    subgraph Frontend ["Frontend (Next.js)"]
+        UI[React Components]
+        Pages[App Router Pages]
+        API_Client[API Client / Fetch]
+    end
+
+    subgraph Backend ["Backend (ElysiaJS)"]
+        Routes[API Routes]
+        Middleware[Auth & RBAC Middleware]
+        Controllers[Controllers]
+        Services[Business Logic]
+    end
+
+    subgraph Database ["Database (PostgreSQL)"]
+        Tables[(Tables)]
+    end
+
+    subgraph External ["External Services"]
+        YT[YouTube iFrame API]
+        GF[Google Forms]
+        Storage[File Storage]
+    end
+
+    UI --> Pages --> API_Client
+    API_Client -->|REST API| Routes
+    Routes --> Middleware --> Controllers --> Services
+    Services --> Tables
+    Services --> Storage
+    UI --> YT
+    UI --> GF
+```
+
+---
+
+## 8. Keamanan & Otorisasi
+
+### 8.1 Autentikasi
+- Login menggunakan email & password
+- JWT-based authentication (Access Token + Refresh Token)
+- Access Token: short-lived (15 menit)
+- Refresh Token: long-lived (7 hari), disimpan di httpOnly cookie
+
+### 8.2 Role-Based Access Control (RBAC)
+
+| Resource | Super Admin | Admin (Own Prodi) | Admin (Other Prodi) | Student |
+|---|---|---|---|---|
+| **Materi** | Full CRUD (All) | Full CRUD | Read Only | Read + Download |
+| **Video** | Full CRUD (All) | Full CRUD | Read Only | Watch Only |
+| **Responsi** | Full CRUD (All) | Full CRUD | Read Only | Read Only |
+| **Latihan Soal** | Full CRUD (All) | Full CRUD | Read Only | Access (Redirect) |
+| **Request Materi** | View All | Manage (Own Prodi) | — | Submit + View Own |
+| **User Management** | Full CRUD | — | — | — |
+| **Log Activity** | Full Access | — | — | — |
+
+---
+
+## 9. Non-Functional Requirements
+
+| Aspek | Requirement |
+|---|---|
+| **Performance** | Halaman load < 3 detik, API response < 500ms |
+| **Responsive** | Mendukung desktop, tablet, dan mobile |
+| **Browser Support** | Chrome, Firefox, Edge, Safari (versi terbaru) |
+| **Scalability** | Mendukung minimal 500 concurrent users |
+| **Availability** | Target uptime 99% |
+| **Data Backup** | Backup database harian |
+
+---
+
+## 10. Milestone & Timeline (Estimasi)
+
+| Phase | Durasi | Deliverable |
+|---|---|---|
+| **Phase 1 — Foundation** | 2 minggu | Setup project, auth, user management, database schema |
+| **Phase 2 — Core Features** | 3 minggu | Materi, video, responsi, latihan soal |
+| **Phase 3 — Advanced Features** | 2 minggu | Request materi, log activity, dashboard analytics |
+| **Phase 4 — Polish & Testing** | 1 minggu | UI polish, testing, bug fixing, optimization |
+| **Phase 5 — Deployment** | 1 minggu | Deployment, monitoring setup, documentation |
+
+> [!NOTE]
+> Timeline bersifat estimasi dan dapat disesuaikan berdasarkan kompleksitas implementasi.
+
+---
+
+## 11. Risiko & Mitigasi
+
+| Risiko | Dampak | Mitigasi |
+|---|---|---|
+| Video YouTube unlisted bisa dibagikan link-nya | Konten bocor di luar platform | Implementasi domain restriction pada YouTube API, rotasi link jika perlu |
+| File storage membengkak | Cost & performance | Set max file size, implementasi auto-cleanup, gunakan cloud storage |
+| Concurrent live streaming load | Server overload | YouTube menangani streaming, HelPhin hanya embed — risiko rendah |
+| Data breach | Keamanan terkompromi | Enkripsi password (bcrypt), HTTPS, validasi input, rate limiting |
+
+---
+
+## 12. Glosarium
+
+| Istilah | Definisi |
+|---|---|
+| **Responsi** | Sesi tutorial/review akademik yang dipandu oleh mahasiswa senior atau asisten |
+| **Prodi** | Program Studi — unit akademik di bawah fakultas |
+| **Himpunan** | Himpunan Mahasiswa — organisasi kemahasiswaan per prodi |
+| **LMS** | Learning Management System — platform pengelolaan pembelajaran |
+| **RBAC** | Role-Based Access Control — kontrol akses berbasis peran |

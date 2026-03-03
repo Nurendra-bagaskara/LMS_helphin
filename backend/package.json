@@ -1,0 +1,27 @@
+{
+    "name": "helphin-lms-backend",
+    "version": "1.0.0",
+    "description": "HelPhin LMS Backend API — ElysiaJS + Drizzle ORM + PostgreSQL",
+    "scripts": {
+        "dev": "bun run --watch src/index.ts",
+        "start": "bun run src/index.ts",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:seed": "bun run src/db/seed.ts",
+        "db:studio": "drizzle-kit studio"
+    },
+    "dependencies": {
+        "elysia": "^1.2.0",
+        "@elysiajs/jwt": "^1.2.0",
+        "@elysiajs/cors": "^1.2.0",
+        "@elysiajs/bearer": "^1.2.0",
+        "@elysiajs/static": "^1.2.0",
+        "drizzle-orm": "^0.38.0",
+        "postgres": "^3.4.0"
+    },
+    "devDependencies": {
+        "drizzle-kit": "^0.30.0",
+        "@types/bun": "latest",
+        "typescript": "^5.0.0"
+    }
+}
