@@ -20,7 +20,15 @@ async function migrate() {
                 "prodi:view",
                 "prodi:manage",
                 "responsi:view",
-                "responsi:manage"
+                "responsi:manage",
+                "matkul:view",
+                "matkul:manage",
+                "materi:view",
+                "materi:manage",
+                "video:view",
+                "video:manage",
+                "exercise:view",
+                "exercise:manage",
             ],
             student: ["dashboard:view", "responsi:view"]
         };

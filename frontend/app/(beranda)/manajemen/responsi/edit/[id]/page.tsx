@@ -14,6 +14,7 @@ export default function EditResponsi() {
     const [linkRequestMateri, setLinkRequestMateri] = useState("");
     const [linkKomunitas, setLinkKomunitas] = useState("");
     const [status, setStatus] = useState("upcoming");
+    const [mataKuliahId, setMataKuliahId] = useState("");
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
 
@@ -44,6 +45,7 @@ export default function EditResponsi() {
                 setLinkRequestMateri(r.requestMaterialLink || "");
                 setLinkKomunitas(r.communityLink || "");
                 setStatus(r.status || "upcoming");
+                setMataKuliahId(r.mataKuliahId || "");
 
                 if (r.scheduleDate) {
                     const dateObj = new Date(r.scheduleDate);
@@ -68,6 +70,14 @@ export default function EditResponsi() {
             router.push("/manajemen/responsi");
         } finally {
             setInitialLoading(false);
+        }
+    };
+
+    const handleBack = () => {
+        if (mataKuliahId) {
+            router.push(`/mata-kuliah/${mataKuliahId}`);
+        } else {
+            router.push("/mata-kuliah");
         }
     };
 
@@ -104,7 +114,7 @@ export default function EditResponsi() {
             const data = await res.json();
             if (data.success) {
                 alert("Data Responsi Berhasil Diperbarui!");
-                router.push("/manajemen/responsi");
+                handleBack();
             } else {
                 alert(`Gagal: ${data.message || "Terjadi kesalahan"}`);
             }
@@ -156,9 +166,9 @@ export default function EditResponsi() {
                 }}>
 
                 <div className="w-full flex items-center border-b border-gray-100 pb-2">
-                    <Link href="/manajemen/responsi" className="text-gray-400 hover:text-[#068DFF] transition-colors text-sm font-semibold mr-4">
+                    <button type="button" onClick={handleBack} className="text-gray-400 hover:text-[#068DFF] transition-colors text-sm font-semibold mr-4">
                         ← Kembali
-                    </Link>
+                    </button>
                     <h3 className="text-[20px] font-semibold leading-[32px] text-black">
                         Informasi Responsi
                     </h3>

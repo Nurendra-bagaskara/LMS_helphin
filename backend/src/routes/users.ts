@@ -9,6 +9,70 @@ import { logActivity } from "../utils/logger";
 export const userRoutes = new Elysia({ prefix: "/users" })
     .use(authMiddleware)
 
+    // ==================== UPDATE SELF PROFILE ====================
+    .patch(
+        "/profile",
+        async ({ user, body, set }: any) => {
+            if (!user) {
+                set.status = 401;
+                return { success: false, message: "Unauthorized" };
+            }
+
+            const updateData: any = {};
+            if (body.name) updateData.name = body.name;
+            if (body.email) {
+                // Check if email belongs to someone else
+                const [existing] = await db
+                    .select()
+                    .from(users)
+                    .where(and(eq(users.email, body.email), ne(users.id, user.id)))
+                    .limit(1);
+                
+                if (existing) {
+                    set.status = 409;
+                    return { success: false, message: "Email already taken" };
+                }
+                updateData.email = body.email;
+            }
+            if (body.password) {
+                updateData.passwordHash = await Bun.password.hash(body.password, {
+                    algorithm: "bcrypt",
+                    cost: 10,
+                });
+            }
+            updateData.updatedAt = new Date();
+
+            const [updated] = await db
+                .update(users)
+                .set(updateData)
+                .where(eq(users.id, user.id))
+                .returning({
+                    id: users.id,
+                    name: users.name,
+                    email: users.email,
+                    roleId: users.roleId,
+                    jabatan: users.jabatan,
+                    prodiId: users.prodiId,
+                });
+
+            if (!updated) {
+                set.status = 404;
+                return { success: false, message: "User not found" };
+            }
+
+            await logActivity(user.id, "update_profile", "user", user.id);
+
+            return { success: true, message: "Profile updated", data: updated };
+        },
+        {
+            body: t.Object({
+                name: t.Optional(t.String({ minLength: 1 })),
+                email: t.Optional(t.String({ format: "email" })),
+                password: t.Optional(t.String({ minLength: 6 })),
+            }),
+        }
+    )
+
     // ==================== LIST USERS (Super Admin) ====================
     .get("/", async ({ user, set, query }: any) => {
         requireRole("super_admin")({ user, set });

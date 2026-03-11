@@ -130,6 +130,8 @@ export const responsi = pgTable("responsi", {
     requestMaterialLink: varchar("request_material_link", { length: 500 }),
     communityLink: varchar("community_link", { length: 500 }),
     status: responsiStatusEnum("status").notNull().default("upcoming"),
+    mataKuliahId: uuid("mata_kuliah_id")
+        .references(() => mataKuliah.id, { onDelete: "cascade" }),
     prodiId: uuid("prodi_id")
         .references(() => prodi.id, { onDelete: "cascade" })
         .notNull(),
