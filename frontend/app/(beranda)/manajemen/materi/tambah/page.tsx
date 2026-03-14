@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function TambahMateri() {
@@ -18,6 +18,21 @@ export default function TambahMateri() {
     const [loading, setLoading] = useState(false);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Inisialisasi dari query params jika ada
+    useEffect(() => {
+        const queryProdiId = searchParams?.get("prodiId");
+        const queryMataKuliahId = searchParams?.get("mataKuliahId");
+        
+        if (queryProdiId || queryMataKuliahId) {
+            setFormData(prev => ({
+                ...prev,
+                ...(queryProdiId ? { prodiId: queryProdiId } : {}),
+                ...(queryMataKuliahId ? { mataKuliahId: queryMataKuliahId } : {})
+            }));
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const userStr = localStorage.getItem("user");
@@ -90,7 +105,7 @@ export default function TambahMateri() {
             const data = await res.json();
             if (data.success) {
                 alert("Materi berhasil ditambahkan! 📄");
-                router.push("/manajemen/materi");
+                router.back();
             } else {
                 alert(`Gagal: ${data.message}`);
             }
@@ -127,9 +142,9 @@ export default function TambahMateri() {
                 style={{ background: "linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, #FFFFFF 100%)" }}>
 
                 <div className="w-full flex items-center border-b border-gray-100 pb-2">
-                    <Link href="/manajemen/materi" className="text-gray-400 hover:text-[#068DFF] transition-colors text-sm font-semibold mr-4">
+                    <button type="button" onClick={() => router.back()} className="text-gray-400 hover:text-[#068DFF] transition-colors text-sm font-semibold mr-4">
                         ← Kembali
-                    </Link>
+                    </button>
                     <h3 className="text-[20px] font-semibold leading-[32px] text-black">
                         Informasi Materi
                     </h3>

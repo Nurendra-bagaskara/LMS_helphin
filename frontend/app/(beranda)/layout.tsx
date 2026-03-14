@@ -31,7 +31,6 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
     "Manajemen Akun": true,
     "Manajemen Akademik": true,
-    "Manajemen Konten": true
   });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -141,6 +140,8 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
         { name: "Responsi", path: "/manajemen/responsi" },
         { name: "Materi", path: "/manajemen/materi" },
         { name: "Video", path: "/manajemen/video" },
+        { name: "Latihan Soal", path: "/manajemen/latihan-soal" },
+        { name: "Request Materi", path: "/manajemen/request-materi" },
       ],
     },
     {
@@ -171,6 +172,14 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       icon: "/Assets/icons/home-active-icon.svg",
       hasSubmenu: false,
       path: "/dashboard",
+      permission: "dashboard:view",
+    },
+    {
+      name: "Mata Kuliah",
+      icon: "/Assets/icons/manajemen-icon.svg",
+      hasSubmenu: false,
+      path: "/mata-kuliah",
+      permission: "materi:view",
     },
     {
       name: "Manajemen Konten",
@@ -341,6 +350,16 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                 {/* Dropdown Menu */}
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        router.push("/profile");
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Profil Saya
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

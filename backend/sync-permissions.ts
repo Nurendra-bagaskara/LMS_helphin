@@ -16,13 +16,16 @@ async function syncPermissions() {
         .set({
             permissions: [
                 "dashboard:view",
-                "akun:view",
-                "akun:manage",
-                "prodi:view",
-                "prodi:manage",
+                "materi:view",
+                "materi:manage",
+                "video:view",
+                "video:manage",
+                "exercise:view",
+                "exercise:manage",
+                "request:view",
+                "request:manage",
                 "responsi:view",
-                "responsi:manage",
-                "log:view"
+                "responsi:manage"
             ]
         } as any)
         .where(eq(roles.code, "admin"));

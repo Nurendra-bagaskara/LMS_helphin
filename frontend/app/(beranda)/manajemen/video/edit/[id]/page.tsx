@@ -97,6 +97,14 @@ export default function EditVideo() {
         }
     };
 
+    const handleBack = () => {
+        if (formData.mataKuliahId) {
+            router.push(`/mata-kuliah/${formData.mataKuliahId}`);
+        } else {
+            router.push("/mata-kuliah");
+        }
+    };
+
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -121,7 +129,7 @@ export default function EditVideo() {
             const data = await res.json();
             if (data.success) {
                 alert("Video berhasil diperbarui! ✨");
-                router.push("/manajemen/video");
+                handleBack();
             } else {
                 alert(`Gagal: ${data.message}`);
             }
@@ -254,7 +262,7 @@ export default function EditVideo() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => router.back()}
+                                onClick={handleBack}
                                 className="px-6 py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition active:scale-95"
                             >
                                 Batal

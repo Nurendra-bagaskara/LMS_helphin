@@ -4,15 +4,15 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function TambahVideo() {
+export default function TambahLatihanSoal() {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        youtubeUrl: "",
-        type: "recording",
+        subject: "",
         prodiId: "",
         mataKuliahId: "",
-        tahunAjaran: ""
+        tahunAjaran: "",
+        googleFormUrl: ""
     });
     const [dataProdi, setDataProdi] = useState<any[]>([]);
     const [dataMatkul, setDataMatkul] = useState<any[]>([]);
@@ -83,20 +83,37 @@ export default function TambahVideo() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.googleFormUrl.startsWith("http")) {
+            alert("URL Google Form harus dimulai dengan http:// atau https://");
+            return;
+        }
+
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await fetch("http://localhost:8000/api/videos", {
+            
+            // Latihan Soal uses JSON instead of FormData as there's no file
+            const payload = {
+                title: formData.title,
+                description: formData.description || undefined,
+                subject: formData.subject || undefined,
+                prodiId: formData.prodiId || undefined,
+                mataKuliahId: formData.mataKuliahId || undefined,
+                tahunAjaran: formData.tahunAjaran || undefined,
+                googleFormUrl: formData.googleFormUrl
+            };
+
+            const res = await fetch("http://localhost:8000/api/exercises", {
                 method: "POST",
-                headers: {
+                headers: { 
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+                    "Authorization": `Bearer ${token}` 
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (data.success) {
-                alert("Video berhasil ditambahkan! 🎬");
+                alert("Latihan Soal berhasil ditambahkan! 📝");
                 router.back();
             } else {
                 alert(`Gagal: ${data.message}`);
@@ -125,9 +142,9 @@ export default function TambahVideo() {
 
             <div className="mb-10 text-center">
                 <h1 className="text-[32px] font-semibold leading-[32px] text-[#1D1D1D]">
-                    Tambah Video
+                    Tambah Latihan Soal
                 </h1>
-                <p className="text-[#068DFF] text-sm mt-2">Cantumkan link YouTube untuk video pembelajaran baru</p>
+                <p className="text-[#068DFF] text-sm mt-2">Tambah tautan latihan soal baru untuk mahasiswa</p>
             </div>
 
             <div className="w-full max-w-[1055px] min-h-[512px] p-[32px] rounded-[8px] flex flex-col items-center gap-[32px] shadow-xl"
@@ -138,54 +155,33 @@ export default function TambahVideo() {
                         ← Kembali
                     </button>
                     <h3 className="text-[20px] font-semibold leading-[32px] text-black">
-                        Informasi Video
+                        Informasi Latihan
                     </h3>
                 </div>
 
                 <form onSubmit={handleSubmit} className="w-full max-w-[1019px] flex flex-col gap-[32px]">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6 w-full">
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-gray-900">Judul Video</label>
+                            <label className="text-sm font-bold text-gray-900">Judul Latihan</label>
                             <input
                                 type="text"
                                 required
-                                placeholder="Contoh: Pertemuan 1 - Pengenalan Algoritma"
+                                placeholder="Contoh: Latihan Soal UAS"
                                 className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-gray-900">Tahun Ajaran</label>
-                            <input
-                                type="text"
-                                placeholder="2023/2024"
-                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all"
-                                value={formData.tahunAjaran}
-                                onChange={(e) => setFormData({ ...formData, tahunAjaran: e.target.value })}
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5 col-span-2">
-                            <label className="text-sm font-bold text-gray-900">Link YouTube</label>
+                            <label className="text-sm font-bold text-gray-900">Tautan Google Form <span className="text-red-500">*</span></label>
                             <input
                                 type="url"
                                 required
-                                placeholder="https://www.youtube.com/watch?v=..."
-                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all font-mono"
-                                value={formData.youtubeUrl}
-                                onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                                placeholder="https://forms.gle/..."
+                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all"
+                                value={formData.googleFormUrl}
+                                onChange={(e) => setFormData({ ...formData, googleFormUrl: e.target.value })}
                             />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-gray-900">Tipe Video</label>
-                            <select
-                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all cursor-pointer"
-                                value={formData.type}
-                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            >
-                                <option value="recording">Recording (Rekaman)</option>
-                                <option value="live">Live Stream</option>
-                            </select>
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-bold text-gray-900">Program Studi</label>
@@ -210,25 +206,43 @@ export default function TambahVideo() {
                                 />
                             )}
                         </div>
-                        <div className="flex flex-col gap-1.5 col-span-2">
+                        <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-bold text-gray-900">Mata Kuliah</label>
                             <select
-                                required
-                                disabled={!formData.prodiId}
                                 className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all cursor-pointer disabled:opacity-50"
                                 value={formData.mataKuliahId}
                                 onChange={(e) => setFormData({ ...formData, mataKuliahId: e.target.value })}
                             >
-                                <option value="">Pilih Mata Kuliah</option>
+                                <option value="">Pilih (Opsional jika umum)</option>
                                 {dataMatkul.map(m => (
                                     <option key={m.id} value={m.id}>({m.code}) {m.name}</option>
                                 ))}
                             </select>
                         </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-bold text-gray-900">Tahun Ajaran</label>
+                            <input
+                                type="text"
+                                placeholder="2023/2024"
+                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all"
+                                value={formData.tahunAjaran}
+                                onChange={(e) => setFormData({ ...formData, tahunAjaran: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-bold text-gray-900">Topik / Subject</label>
+                            <input
+                                type="text"
+                                placeholder="Contoh: Persiapan UTS"
+                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all"
+                                value={formData.subject}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            />
+                        </div>
                         <div className="flex flex-col gap-1.5 col-span-2">
                             <label className="text-sm font-bold text-gray-900">Deskripsi (Opsional)</label>
                             <textarea
-                                placeholder="Deskripsi singkat video..."
+                                placeholder="Deskripsi singkat latihan..."
                                 className="w-full px-[12px] py-[10px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all h-24 resize-none"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -242,7 +256,7 @@ export default function TambahVideo() {
                             disabled={loading}
                             className="w-[264px] h-[54px] bg-[#068DFF] text-white rounded-[4px] font-bold text-[16px] hover:bg-blue-600 transition-all shadow-md disabled:opacity-50"
                         >
-                            {loading ? "Menyimpan..." : "Simpan"}
+                            {loading ? "Menyimpan..." : "Simpan Latihan"}
                         </button>
                     </div>
                 </form>

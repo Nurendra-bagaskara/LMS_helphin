@@ -1,12 +1,20 @@
 {
   "name": "lms",
   "version": "1.0.0",
-  "description": "",
+  "description": "HelPhin LMS — Monorepo (Frontend: Next.js, Backend: ElysiaJS + Bun)",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"bun --cwd backend run dev\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "bun --cwd backend run dev",
+    "install:all": "npm install --prefix frontend && bun install --cwd backend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
+

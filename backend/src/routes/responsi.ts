@@ -14,6 +14,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
         requirePermission("responsi:view")({ user, set });
         let conditions: any[] = [];
         if (query.prodiId) conditions.push(eq(responsi.prodiId, query.prodiId));
+        if (query.mataKuliahId) conditions.push(eq(responsi.mataKuliahId, query.mataKuliahId));
         if (query.status) conditions.push(eq(responsi.status, query.status));
 
         const result = await db
@@ -112,6 +113,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                     communityLink: body.communityLink || null,
                     status: body.status || "upcoming",
                     mataKuliahId: body.mataKuliahId || null,
+                    mataKuliahId: body.mataKuliahId || null,
                     prodiId,
                     createdBy: user.id,
                 })
@@ -140,6 +142,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                         t.Literal("completed"),
                     ])
                 ),
+                mataKuliahId: t.Optional(t.String()),
                 mataKuliahId: t.Optional(t.String()),
                 prodiId: t.Optional(t.String()),
             }),
@@ -178,6 +181,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
             if (body.meetingLink !== undefined) updateData.meetingLink = body.meetingLink;
             if (body.requestMaterialLink !== undefined) updateData.requestMaterialLink = body.requestMaterialLink;
             if (body.communityLink !== undefined) updateData.communityLink = body.communityLink;
+            if (body.mataKuliahId !== undefined) updateData.mataKuliahId = body.mataKuliahId;
             if (body.status) updateData.status = body.status;
             if (body.mataKuliahId !== undefined) updateData.mataKuliahId = body.mataKuliahId;
 
@@ -208,6 +212,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                         t.Literal("completed"),
                     ])
                 ),
+                mataKuliahId: t.Optional(t.Nullable(t.String())),
                 mataKuliahId: t.Optional(t.Nullable(t.String())),
             }),
         }
