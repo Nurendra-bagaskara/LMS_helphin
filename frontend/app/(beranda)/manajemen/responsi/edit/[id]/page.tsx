@@ -18,12 +18,15 @@ export default function EditResponsi() {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [listMatkul, setListMatkul] = useState<any[]>([]);
-    const [mataKuliahId, setMataKuliahId] = useState("");
     const [prodiId, setProdiId] = useState("");
 
     const router = useRouter();
     const params = useParams();
     const { id } = params;
+
+    const handleBack = () => {
+        router.push("/manajemen/responsi");
+    };
 
     useEffect(() => {
         fetchResponsi();
