@@ -105,8 +105,12 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center justify-center py-10">
             <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="mb-8 text-center flex flex-col items-center">
-                    <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl font-bold mb-4">
-                        {name ? name.substring(0, 2).toUpperCase() : "U"}
+                    <div className="w-20 h-20 relative rounded-full overflow-hidden mb-4 bg-orange-400 flex items-center justify-center shadow-sm">
+                        <img
+                            src="/Assets/icons/Profile%20Picture.svg"
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-800">Profil Saya</h1>
                     <p className="text-gray-500 text-sm mt-1">Perbarui informasi dasar profil dan password Anda</p>

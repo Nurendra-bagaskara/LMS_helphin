@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FooterDashboard from "../dashboard/components/footer_dashboard";
+import UploadSoal from "./components/UploadModal";
 
 export default function ManajemenBankSoal() {
     const [dataBankSoal, setDataBankSoal] = useState<any[]>([]);
@@ -10,6 +11,7 @@ export default function ManajemenBankSoal() {
     const [permissions, setPermissions] = useState<string[]>([]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -140,11 +142,14 @@ export default function ManajemenBankSoal() {
                         />
                     </div>
                     {canManage && (
-                        <Link href="/bank-soal/tambah">
-                            <button className="bg-black text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition active:scale-95 shadow-lg shadow-gray-200">
-                                Tambah Bank Soal +
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsUploadOpen(true)}
+                                className="px-6 py-2.5 rounded-[14px] text-white font-bold text-sm bg-[#068DFF] shadow-md hover:bg-blue-600 transition active:scale-95"
+                            >
+                                Upload Soal
                             </button>
-                        </Link>
+                        </div>
                     )}
                 </div>
 
@@ -276,6 +281,9 @@ export default function ManajemenBankSoal() {
                     </div>
                 </div>
             )}
+
+            {/* Modal Upload */}
+            {isUploadOpen && <UploadSoal onClose={() => setIsUploadOpen(false)} />}
         </div>
     );
 }

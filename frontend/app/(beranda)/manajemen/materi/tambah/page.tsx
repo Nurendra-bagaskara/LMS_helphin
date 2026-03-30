@@ -1,8 +1,73 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+const CustomSelect = ({ 
+  options, 
+  value, 
+  onChange, 
+  placeholder,
+  disabled = false
+}: { 
+  options: {value: string, label: string}[], 
+  value: string, 
+  onChange: (val: string) => void, 
+  placeholder: string,
+  disabled?: boolean
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedLabel = options.find(o => o.value === value)?.label || "";
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <div 
+        className={`w-full h-[45px] px-[12px] bg-white border ${isOpen ? 'border-[#068DFF] ring-2 ring-blue-100' : 'border-[#E6E6E6]'} rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] flex justify-between items-center transition-all ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:border-[#068DFF]'}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <span className={value ? "text-[#1D1D1D] font-medium truncate pr-2" : "text-gray-400"}>{selectedLabel || placeholder}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      
+      {isOpen && !disabled && (
+        <div className="absolute z-50 w-full mt-2 bg-white border border-blue-50 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="py-1">
+            {options.map((opt) => (
+              <div 
+                key={opt.value}
+                className={`px-4 py-3 text-[14px] cursor-pointer transition-colors select-none ${value === opt.value ? 'bg-[#D6EFFF] text-[#068DFF] font-semibold' : 'text-gray-700 hover:bg-[#D6EFFF] hover:text-[#068DFF] font-medium'}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.label}
+              </div>
+            ))}
+            {options.length === 0 && (
+              <div className="px-4 py-3 text-[14px] text-gray-400 italic text-center">Data tidak tersedia</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function TambahMateri() {
     const [formData, setFormData] = useState({
@@ -128,7 +193,7 @@ export default function TambahMateri() {
             }}>
 
             <div className="mb-10">
-                <Image src="/images/helPhin 2.png" alt="Logo Helphin" width={150} height={50} priority />
+                <Image src="/Assets/Logo-helphin-biru.png" alt="Logo Helphin" width={150} height={50} priority />
             </div>
 
             <div className="mb-10 text-center">
@@ -152,7 +217,7 @@ export default function TambahMateri() {
 
                 <form onSubmit={handleSubmit} className="w-full max-w-[1019px] flex flex-col gap-[32px]">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-6 w-full">
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 z-10">
                             <label className="text-sm font-bold text-gray-900">Judul Materi</label>
                             <input
                                 type="text"
@@ -163,7 +228,7 @@ export default function TambahMateri() {
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             />
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 z-10">
                             <label className="text-sm font-bold text-gray-900">Tahun Ajaran</label>
                             <input
                                 type="text"
@@ -173,20 +238,15 @@ export default function TambahMateri() {
                                 onChange={(e) => setFormData({ ...formData, tahunAjaran: e.target.value })}
                             />
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 relative z-30">
                             <label className="text-sm font-bold text-gray-900">Program Studi</label>
                             {isSuperAdmin ? (
-                                <select
-                                    required
-                                    className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all cursor-pointer"
+                                <CustomSelect 
+                                    options={dataProdi.map(p => ({ value: p.id, label: p.name }))}
                                     value={formData.prodiId}
-                                    onChange={(e) => setFormData({ ...formData, prodiId: e.target.value, mataKuliahId: "" })}
-                                >
-                                    <option value="">Pilih Program Studi</option>
-                                    {dataProdi.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setFormData({ ...formData, prodiId: val, mataKuliahId: "" })}
+                                    placeholder="Pilih Program Studi"
+                                />
                             ) : (
                                 <input
                                     type="text"
@@ -196,22 +256,17 @@ export default function TambahMateri() {
                                 />
                             )}
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 relative z-20">
                             <label className="text-sm font-bold text-gray-900">Mata Kuliah</label>
-                            <select
-                                required
-                                disabled={!formData.prodiId}
-                                className="w-full h-[45px] px-[12px] bg-white border border-[#E6E6E6] rounded-[4px] shadow-[0px_2px_8px_rgba(6,141,255,0.08)] text-[14px] text-[#1D1D1D] outline-none focus:border-[#068DFF] transition-all cursor-pointer disabled:opacity-50"
+                            <CustomSelect 
+                                options={dataMatkul.map(m => ({ value: m.id, label: `(${m.code}) ${m.name}` }))}
                                 value={formData.mataKuliahId}
-                                onChange={(e) => setFormData({ ...formData, mataKuliahId: e.target.value })}
-                            >
-                                <option value="">Pilih Mata Kuliah</option>
-                                {dataMatkul.map(m => (
-                                    <option key={m.id} value={m.id}>({m.code}) {m.name}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => setFormData({ ...formData, mataKuliahId: val })}
+                                placeholder="Pilih Mata Kuliah"
+                                disabled={!formData.prodiId}
+                            />
                         </div>
-                        <div className="flex flex-col gap-1.5 col-span-2">
+                        <div className="flex flex-col gap-1.5 col-span-2 z-10">
                             <label className="text-sm font-bold text-gray-900">Deskripsi (Opsional)</label>
                             <textarea
                                 placeholder="Deskripsi singkat materi..."
@@ -220,10 +275,9 @@ export default function TambahMateri() {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
-                        <div className="flex flex-col gap-1.5 col-span-2">
+                        <div className="flex flex-col gap-1.5 col-span-2 z-10">
                             <label className="text-sm font-bold text-gray-900">File Materi</label>
-                            <div className="border-2 border-dashed border-[#E6E6E6] rounded-[8px] p-6 text-center hover:border-[#068DFF] transition-all cursor-pointer"
-                                onClick={() => document.getElementById('file-input')?.click()}>
+                            <label className="border-2 border-dashed border-gray-300 rounded-2xl h-48 flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50/50 hover:border-[#068DFF] transition-colors cursor-pointer group relative overflow-hidden">
                                 <input
                                     id="file-input"
                                     type="file"
@@ -231,15 +285,25 @@ export default function TambahMateri() {
                                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
                                     onChange={(e) => setFile(e.target.files?.[0] || null)}
                                 />
+                                
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-[#068DFF] mb-3 group-hover:scale-110 transition-transform">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                </div>
+
                                 {file ? (
-                                    <p className="text-sm text-[#068DFF] font-semibold">📄 {file.name}</p>
-                                ) : (
-                                    <div>
-                                        <p className="text-gray-400 text-sm">Klik untuk memilih file</p>
-                                        <p className="text-gray-300 text-xs mt-1">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX (Maks. 50MB)</p>
+                                    <div className="flex flex-col items-center">
+                                        <h3 className="text-sm font-bold text-[#068DFF] truncate max-w-[300px]">{file.name}</h3>
+                                        <p className="text-xs text-gray-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                     </div>
+                                ) : (
+                                    <>
+                                        <h3 className="text-sm font-bold text-gray-700">Klik atau seret file ke sini</h3>
+                                        <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX (Maks. 50MB)</p>
+                                    </>
                                 )}
-                            </div>
+                            </label>
                         </div>
                     </div>
 

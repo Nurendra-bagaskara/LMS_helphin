@@ -335,8 +335,12 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">{userInitials}</span>
+                  <div className="w-10 h-10 relative bg-orange-400 rounded-full overflow-hidden flex items-center justify-center">
+                    <img
+                      src="/Assets/icons/Profile%20Picture.svg"
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="text-left hidden sm:block">
                     <p className="text-sm font-semibold text-gray-800">

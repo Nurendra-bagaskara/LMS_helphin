@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FooterDashboard from "../../dashboard/components/footer_dashboard";
@@ -93,9 +94,14 @@ export default function ManajemenMateri() {
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-800 font-jakarta">
             <div className="flex-1 p-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-10">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold">Manajemen Materi Pelajaran</h1>
-                    <p className="text-gray-400 text-sm italic">Kelola konten materi pembelajaran per prodi dan mata kuliah.</p>
+                <div className="mb-8 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-bold">Manajemen Materi Pelajaran</h1>
+                        <p className="text-gray-400 text-sm italic">Kelola konten materi pembelajaran per prodi dan mata kuliah.</p>
+                    </div>
+                    <div className="hidden md:block">
+                        <Image src="/Assets/Logo-helphin-biru.png" alt="Logo Helphin" width={140} height={40} priority />
+                    </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-t-xl border-b flex justify-between items-center shadow-sm">
@@ -110,7 +116,7 @@ export default function ManajemenMateri() {
                     </div>
                     {canManage && (
                         <Link href="/manajemen/materi/tambah">
-                            <button className="bg-black text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition active:scale-95 shadow-lg shadow-gray-200">
+                            <button className="px-6 py-2.5 rounded-[14px] text-white font-bold text-sm bg-[#068DFF] shadow-md hover:bg-blue-600 transition active:scale-95">
                                 Tambah Materi +
                             </button>
                         </Link>
