@@ -280,17 +280,15 @@ export default function MataKuliahDetailPage() {
               <button
                 key={f.key}
                 onClick={() => setActiveFilter(f.key)}
-                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-150 ${
-                  activeFilter === f.key
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-150 ${activeFilter === f.key
                     ? "bg-blue-500 text-white shadow-sm"
                     : "bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-500"
-                }`}
+                  }`}
               >
                 {f.label}
                 {counts[f.key] > 0 && (
-                  <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    activeFilter === f.key ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"
-                  }`}>
+                  <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeFilter === f.key ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"
+                    }`}>
                     {counts[f.key]}
                   </span>
                 )}
@@ -367,11 +365,10 @@ export default function MataKuliahDetailPage() {
                   {v.description && (
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{v.description}</p>
                   )}
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    v.type === "live"
+                  <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${v.type === "live"
                       ? "bg-red-50 text-red-500 border border-red-100"
                       : "bg-blue-50 text-blue-500 border border-blue-100"
-                  }`}>
+                    }`}>
                     {v.type}
                   </span>
                 </div>
