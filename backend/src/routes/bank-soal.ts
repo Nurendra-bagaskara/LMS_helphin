@@ -24,8 +24,8 @@ export const bankSoalRoutes = new Elysia({ prefix: "/bank-soal" })
 
         let conditions: any[] = [];
 
-        // Data scoping: non-super-admins only see their own prodi
-        if (!user.permissions.includes("*")) {
+        // Data scoping: non-super-admins see their own prodi, BUT students see all for cross-prodi
+        if (!user.permissions.includes("*") && user.role !== "student") {
             conditions.push(eq(bankSoal.prodiId, user.prodiId));
         } else if (query.prodiId) {
             conditions.push(eq(bankSoal.prodiId, query.prodiId));
@@ -73,12 +73,14 @@ export const bankSoalRoutes = new Elysia({ prefix: "/bank-soal" })
                 mataKuliahName: mataKuliah.name,
                 prodiId: bankSoal.prodiId,
                 prodiName: prodi.name,
+                uploaderName: users.name,
                 uploadedBy: bankSoal.uploadedBy,
                 createdAt: bankSoal.createdAt,
             })
             .from(bankSoal)
             .leftJoin(mataKuliah, eq(bankSoal.mataKuliahId, mataKuliah.id))
             .leftJoin(prodi, eq(bankSoal.prodiId, prodi.id))
+            .leftJoin(users, eq(bankSoal.uploadedBy, users.id))
             .where(eq(bankSoal.id, params.id))
             .limit(1);
 

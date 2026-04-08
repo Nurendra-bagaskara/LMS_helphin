@@ -1,0 +1,110 @@
+[
+  {
+    "id": "94db1a04-9158-4b8e-b58a-679a2dc1318d",
+    "name": "Super Admin",
+    "email": "superadmin@helphin.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "be4c9f9f-13f3-497d-b8f0-884e6d183fbb",
+    "jabatan": null,
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-02-23T21:51:54.756Z",
+    "updatedAt": "2026-02-23T21:51:54.756Z"
+  },
+  {
+    "id": "b3eff5b0-03b0-4d10-8f04-c1e18f20caff",
+    "name": "Admin Informatika",
+    "email": "admin.if@helphin.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": null,
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-02-23T21:51:54.838Z",
+    "updatedAt": "2026-04-04T05:08:31.362Z"
+  },
+  {
+    "id": "0bec6495-799f-4ff1-af41-bd2e3038cc81",
+    "name": "iii",
+    "email": "yy.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": "iii",
+    "prodiId": "a2aacbe7-2962-4a88-badb-324574629e6d",
+    "createdAt": "2026-02-25T14:45:13.622Z",
+    "updatedAt": "2026-03-01T15:42:45.242Z"
+  },
+  {
+    "id": "c198cd81-60fe-4f83-8fb9-7e8462bc797a",
+    "name": "adam",
+    "email": "admin2.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": "ccc",
+    "prodiId": "a2aacbe7-2962-4a88-badb-324574629e6d",
+    "createdAt": "2026-02-24T21:24:59.408Z",
+    "updatedAt": "2026-03-02T04:04:26.937Z"
+  },
+  {
+    "id": "6478963e-fe2a-4a54-a7ed-1eb347ae83cb",
+    "name": "andi",
+    "email": "tes.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": "kadiv",
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-03-02T15:05:49.456Z",
+    "updatedAt": "2026-03-02T15:05:49.456Z"
+  },
+  {
+    "id": "8b6b8531-95a9-4026-add0-2265c5f5d274",
+    "name": "kara",
+    "email": "wakadiv.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": "wakadiv",
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-03-02T15:05:49.530Z",
+    "updatedAt": "2026-03-02T15:05:49.530Z"
+  },
+  {
+    "id": "b50dce3e-5349-4a64-8a89-10c5d3fdec21",
+    "name": "adminkece",
+    "email": "adminkece.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "jabatan": "tes",
+    "prodiId": "2eac1daf-4bbd-47a3-bea1-2cf3021d7b5c",
+    "createdAt": "2026-02-25T11:49:35.255Z",
+    "updatedAt": "2026-03-14T13:50:04.028Z"
+  },
+  {
+    "id": "c7d25774-e7eb-4b94-8b86-7c7e322e53ed",
+    "name": "Mahasiswa IF",
+    "email": "student.if@helphin.com",
+    "nim": null,
+    "passwordHash": "$2b$10$MpggZjYznbnAg0u2osrVk.XNUhJ8v.E7oQTNokSUAXOjMOw6xOgTq",
+    "roleId": "d5acc51b-3c70-4050-8575-a6921f40ec95",
+    "jabatan": "dan",
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-02-23T21:51:54.920Z",
+    "updatedAt": "2026-04-04T05:21:06.831Z"
+  },
+  {
+    "id": "a4f43763-37f5-458c-a5d5-4446cb038578",
+    "name": "bagas",
+    "email": "bagas121.helphian@gmail.com",
+    "nim": null,
+    "passwordHash": "$2b$10$kjdjgYHydCCNTG6uydJaluGxPcRLstcooFq955J308fPJ3RJp61oO",
+    "roleId": "d5acc51b-3c70-4050-8575-a6921f40ec95",
+    "jabatan": "staff",
+    "prodiId": "df04ea50-0112-47cb-a379-98137681fdb3",
+    "createdAt": "2026-04-04T12:30:51.349Z",
+    "updatedAt": "2026-04-04T12:54:39.547Z"
+  }
+]

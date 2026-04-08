@@ -20,6 +20,20 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
             const updateData: any = {};
             if (body.name) updateData.name = body.name;
+            if (body.nim) {
+                // Check if NIM belongs to someone else
+                const [existing] = await db
+                    .select()
+                    .from(users)
+                    .where(and(eq(users.nim, body.nim), ne(users.id, user.id)))
+                    .limit(1);
+                
+                if (existing) {
+                    set.status = 409;
+                    return { success: false, message: "NIM already taken" };
+                }
+                updateData.nim = body.nim;
+            }
             if (body.email) {
                 // Check if email belongs to someone else
                 const [existing] = await db
@@ -53,6 +67,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
                     roleId: users.roleId,
                     jabatan: users.jabatan,
                     prodiId: users.prodiId,
+                    nim: users.nim,
                 });
 
             if (!updated) {
@@ -68,6 +83,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
             body: t.Object({
                 name: t.Optional(t.String({ minLength: 1 })),
                 email: t.Optional(t.String({ format: "email" })),
+                nim: t.Optional(t.String({ minLength: 1 })),
                 password: t.Optional(t.String({ minLength: 6 })),
             }),
         }

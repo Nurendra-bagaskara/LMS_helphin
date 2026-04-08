@@ -1,0 +1,40 @@
+[
+  {
+    "id": "be4c9f9f-13f3-497d-b8f0-884e6d183fbb",
+    "name": "Super Admin",
+    "code": "super_admin",
+    "permissions": [
+      "*"
+    ],
+    "createdAt": "2026-03-01T23:14:06.522Z"
+  },
+  {
+    "id": "19533726-7f9f-45bf-8ac8-7d92bbb2485f",
+    "name": "Admin Prodi",
+    "code": "admin",
+    "permissions": [
+      "dashboard:view",
+      "prodi:view",
+      "prodi:edit",
+      "materi:view",
+      "materi:manage",
+      "video:view",
+      "video:manage",
+      "bank_soal:view",
+      "bank_soal:manage",
+      "responsi:view",
+      "responsi:manage",
+      "log:view"
+    ],
+    "createdAt": "2026-03-01T23:14:06.524Z"
+  },
+  {
+    "id": "d5acc51b-3c70-4050-8575-a6921f40ec95",
+    "name": "Student",
+    "code": "student",
+    "permissions": [
+      "dashboard:view"
+    ],
+    "createdAt": "2026-03-01T23:14:06.524Z"
+  }
+]

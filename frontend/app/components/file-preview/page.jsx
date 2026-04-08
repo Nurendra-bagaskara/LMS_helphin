@@ -25,7 +25,7 @@ export default function FilePreview({ name, size, preview, onRemove }) {
             <div className="w-full max-w-[300px]">
                 {/* 2. Nama File dan Icon Sampah*/}
                 <div className="flex items-center justify-between gap-2">
-                    <span className="text-[12px] font-bold text-[#1D1D1D] truncate">
+                    <span className="text-[12px] font-bold text-[#1D1D1D] dark:text-slate-100 truncate">
                         {name}
                     </span>
 
@@ -42,13 +42,14 @@ export default function FilePreview({ name, size, preview, onRemove }) {
                             alt="Hapus"
                             width={12}
                             height={12}
+                            className="dark:brightness-150"
                             unoptimized
                         />
                     </button>
                 </div>
 
                 {/* 3. Ukuran File*/}
-                <div className="text-[10px] text-[#636363] leading-tight">
+                <div className="text-[10px] text-[#636363] dark:text-slate-500 leading-tight">
                     {size}
                 </div>
             </div>

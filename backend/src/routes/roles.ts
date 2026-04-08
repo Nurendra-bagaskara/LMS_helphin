@@ -73,42 +73,51 @@ export const roleRoutes = new Elysia({ prefix: "/roles" })
     .patch(
         "/:id",
         async ({ user, params, body, set }: any) => {
-            requireRole("super_admin")({ user, set });
+            try {
+                requireRole("super_admin")({ user, set });
 
-            const { name, code, permissions } = body;
-            const updateData: any = {};
-            if (name) updateData.name = name;
-            if (code) updateData.code = code;
-            if (permissions) updateData.permissions = permissions;
+                const { name, code, permissions } = body;
+                const updateData: any = {};
+                if (name) updateData.name = name;
+                if (code) updateData.code = code;
+                if (permissions) updateData.permissions = permissions;
 
-            if (code) {
-                // Check if code exists in other roles
-                const [existing] = await db
-                    .select()
-                    .from(roles)
-                    .where(eq(roles.code, code))
-                    .limit(1);
+                if (code) {
+                    // Check if code exists in other roles
+                    const [existing] = await db
+                        .select()
+                        .from(roles)
+                        .where(eq(roles.code, code))
+                        .limit(1);
 
-                if (existing && existing.id !== params.id) {
-                    set.status = 409;
-                    return { success: false, message: "Role code already exists" };
+                    if (existing && String(existing.id) !== String(params.id)) {
+                        set.status = 409;
+                        return { success: false, message: "Role code already exists" };
+                    }
                 }
+
+                if (Object.keys(updateData).length === 0) {
+                    return { success: true, message: "No changes made" };
+                }
+
+                const [updated] = await db
+                    .update(roles)
+                    .set(updateData)
+                    .where(eq(roles.id, params.id))
+                    .returning();
+
+                if (!updated) {
+                    set.status = 404;
+                    return { success: false, message: "Role not found" };
+                }
+
+                await logActivity(user.id, "update_role", "role", params.id, body);
+
+                return { success: true, message: "Role updated", data: updated };
+            } catch (error: any) {
+                console.error("PATCH /roles/:id error:", error);
+                throw error;
             }
-
-            const [updated] = await db
-                .update(roles)
-                .set(updateData)
-                .where(eq(roles.id, params.id))
-                .returning();
-
-            if (!updated) {
-                set.status = 404;
-                return { success: false, message: "Role not found" };
-            }
-
-            await logActivity(user.id, "update_role", "role", params.id, body);
-
-            return { success: true, message: "Role updated", data: updated };
         },
         {
             body: t.Object({

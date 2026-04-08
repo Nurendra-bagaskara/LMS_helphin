@@ -10,11 +10,19 @@ export default function SessionManager({ children }: { children: React.ReactNode
     const REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours in ms
 
     const handleLogout = useCallback(() => {
+        const currentPath = window.location.pathname;
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         localStorage.removeItem("lastActivity");
-        router.push("/login");
+
+        if (currentPath.startsWith("/superadmin")) {
+            router.push("/superadmin/login");
+        } else if (currentPath.startsWith("/admin")) {
+            router.push("/admin/login");
+        } else {
+            router.push("/login");
+        }
     }, [router]);
 
     const refreshTokens = useCallback(async () => {
@@ -41,11 +49,14 @@ export default function SessionManager({ children }: { children: React.ReactNode
 
     useEffect(() => {
         // Prevent running on public pages
-        if (pathname === "/login" || pathname === "/register") {
+        const publicPages = ["/login", "/register", "/admin/login", "/superadmin/login"];
+        if (publicPages.includes(pathname) || pathname.startsWith("/student/responsi/")) {
             // Also clean up stale lastActivity on login page to be safe
-            const lastActive = localStorage.getItem("lastActivity");
-            if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_LIMIT) {
-                localStorage.removeItem("lastActivity");
+            if (publicPages.includes(pathname)) {
+                const lastActive = localStorage.getItem("lastActivity");
+                if (lastActive && Date.now() - parseInt(lastActive, 10) > INACTIVITY_LIMIT) {
+                    localStorage.removeItem("lastActivity");
+                }
             }
             return;
         }

@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { exercises, mataKuliah, prodi } from "../db/schema";
+import { exercises, mataKuliah, prodi, users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole, requireProdiAccessOrAdmin } from "../middleware/rbac";
@@ -28,11 +28,13 @@ export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
                 tahunAjaran: exercises.tahunAjaran,
                 prodiId: exercises.prodiId,
                 prodiName: prodi.name,
+                uploaderName: users.name,
                 createdAt: exercises.createdAt,
             })
             .from(exercises)
             .leftJoin(mataKuliah, eq(exercises.mataKuliahId, mataKuliah.id))
             .leftJoin(prodi, eq(exercises.prodiId, prodi.id))
+            .leftJoin(users, eq(exercises.createdBy, users.id))
             .where(conditions.length > 0 ? and(...conditions) : undefined)
             .orderBy(exercises.createdAt);
 
@@ -53,11 +55,13 @@ export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
                 tahunAjaran: exercises.tahunAjaran,
                 prodiId: exercises.prodiId,
                 prodiName: prodi.name,
+                uploaderName: users.name,
                 createdAt: exercises.createdAt,
             })
             .from(exercises)
             .leftJoin(mataKuliah, eq(exercises.mataKuliahId, mataKuliah.id))
             .leftJoin(prodi, eq(exercises.prodiId, prodi.id))
+            .leftJoin(users, eq(exercises.createdBy, users.id))
             .where(eq(exercises.id, params.id))
             .limit(1);
 

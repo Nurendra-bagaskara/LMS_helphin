@@ -1,0 +1,6 @@
+ALL PRODIS:
+- [2eac1daf-4bbd-47a3-bea1-2cf3021d7b5c] S1 Sistem Informasi (fakultas: f71254f7-fcf7-455a-a730-57a8d99e6945). Courses: 2, Users: 1
+- [af14d608-e182-4bcf-a3f9-d54a0b4ded38] S1 Teknik Industri (fakultas: f372cade-a3c6-4101-955a-300c57777138). Courses: 1, Users: 0
+- [a2aacbe7-2962-4a88-badb-324574629e6d] test1 (fakultas: 21c4e5e9-288f-4fec-a450-ce2f6d4ac883). Courses: 11, Users: 2
+- [0b290d30-9556-445d-8030-4fe5c05967f3] hhhsqdw (fakultas: f372cade-a3c6-4101-955a-300c57777138). Courses: 0, Users: 0
+- [df04ea50-0112-47cb-a379-98137681fdb3] S1 Informatika (fakultas: f71254f7-fcf7-455a-a730-57a8d99e6945). Courses: 1, Users: 6

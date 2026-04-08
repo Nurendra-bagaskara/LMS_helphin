@@ -7,8 +7,8 @@ async function seed() {
 
     // 1. Create Default Roles
     const [superAdminRole] = await db.insert(roles).values({ name: "Super Admin", code: "super_admin", permissions: ["*"] }).returning();
-    const [adminRole] = await db.insert(roles).values({ name: "Admin Prodi", code: "admin", permissions: ["dashboard:view", "prodi:view", "prodi:edit", "materi:view", "materi:edit", "video:view", "video:edit", "responsi:view", "responsi:edit"] }).returning();
-    const [studentRole] = await db.insert(roles).values({ name: "Student", code: "student", permissions: ["dashboard:view"] }).returning();
+    const [adminRole] = await db.insert(roles).values({ name: "Admin Prodi", code: "admin", permissions: ["dashboard:view", "prodi:view", "prodi:edit", "matkul:view", "matkul:manage", "materi:view", "materi:edit", "video:view", "video:edit", "responsi:view", "responsi:edit"] }).returning();
+    const [studentRole] = await db.insert(roles).values({ name: "Student", code: "student", permissions: ["dashboard:view", "matkul:view", "materi:view", "video:view", "responsi:view", "bank_soal:view"] }).returning();
     console.log("✅ Roles created");
 
     // 2. Create Fakultas
@@ -56,13 +56,14 @@ async function seed() {
 
     // 4. Create Mata Kuliah
     await db.insert(mataKuliah).values([
-        { name: "Kalkulus", code: "IF1001", prodiId: prodiIF.id },
-        { name: "Algoritma & Pemrograman", code: "IF1002", prodiId: prodiIF.id },
-        { name: "Basis Data", code: "IF2001", prodiId: prodiIF.id },
-        { name: "Kalkulus", code: "SI1001", prodiId: prodiSI.id },
-        { name: "Manajemen Basis Data", code: "SI2001", prodiId: prodiSI.id },
-        { name: "Statistika Industri", code: "TI1001", prodiId: prodiTI.id },
+        { name: "Kalkulus", prodiId: prodiIF.id },
+        { name: "Algoritma & Pemrograman", prodiId: prodiIF.id },
+        { name: "Basis Data", prodiId: prodiIF.id },
+        { name: "Kalkulus", prodiId: prodiSI.id },
+        { name: "Manajemen Basis Data", prodiId: prodiSI.id },
+        { name: "Statistika Industri", prodiId: prodiTI.id },
     ]);
+
 
     console.log("✅ Mata Kuliah created");
 

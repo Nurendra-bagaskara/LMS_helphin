@@ -2,6 +2,8 @@ import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
+import { join } from "path";
+import { existsSync } from "fs";
 
 // Routes
 import { authRoutes } from "./routes/auth";
@@ -18,6 +20,7 @@ import { requestRoutes } from "./routes/requests";
 import { roleRoutes } from "./routes/roles";
 import { activityLogRoutes } from "./routes/activity-logs";
 import { dashboardRoutes } from "./routes/dashboard";
+import { supportRoutes } from "./routes/support";
 
 const PORT = process.env.PORT || 3000;
 
@@ -30,12 +33,19 @@ const app = new Elysia()
             secret: process.env.JWT_SECRET || "helphin-lms-jwt-secret-key-2026",
         })
     )
-    .use(
-        staticPlugin({
-            assets: "uploads",
-            prefix: "/uploads",
-        })
-    )
+    // ==================== STATIC FILES ====================
+    .get("/uploads/*", ({ params, set, query }: any) => {
+        const path = decodeURIComponent(params["*"]);
+        const filePath = join(import.meta.dir, "../uploads", path);
+        if (existsSync(filePath)) {
+            if (query.download) {
+                set.headers["Content-Disposition"] = `attachment; filename="${path.split("/").pop()}"`;
+            }
+            return Bun.file(filePath);
+        }
+        set.status = 404;
+        return { success: false, message: "File not found" };
+    })
 
     // ==================== ERROR HANDLER ====================
     .onError(({ code, error, set }) => {
@@ -59,6 +69,9 @@ const app = new Elysia()
             return { success: false, message: errMessage };
         }
         console.error("Unhandled error:", error);
+        if (error instanceof Error) {
+            console.error(error.stack);
+        }
         set.status = 500;
         return {
             success: false,
@@ -97,6 +110,7 @@ const app = new Elysia()
             .use(roleRoutes)
             .use(activityLogRoutes)
             .use(dashboardRoutes)
+            .use(supportRoutes)
     )
 
     // ==================== START ====================

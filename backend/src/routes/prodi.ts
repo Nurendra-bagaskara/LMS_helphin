@@ -7,9 +7,7 @@ import { requireRole, requirePermission } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
 
 export const prodiRoutes = new Elysia({ prefix: "/prodi" })
-    .use(authMiddleware)
-
-    // LIST (with fakultas name)
+    // LIST (with fakultas name) - PUBLIC for registration
     .get("/", async ({ query }: any) => {
         const result = await db
             .select({
@@ -19,6 +17,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
                 fakultasId: prodi.fakultasId,
                 fakultasName: fakultas.name,
                 universityName: fakultas.universityName,
+                logoUrl: prodi.logoUrl,
                 createdAt: prodi.createdAt,
             })
             .from(prodi)
@@ -27,6 +26,8 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
 
         return { success: true, data: result };
     })
+
+    .use(authMiddleware)
 
     // GET BY ID
     .get("/:id", async ({ params, set }: any) => {
@@ -38,6 +39,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
                 fakultasId: prodi.fakultasId,
                 fakultasName: fakultas.name,
                 universityName: fakultas.universityName,
+                logoUrl: prodi.logoUrl,
                 createdAt: prodi.createdAt,
             })
             .from(prodi)
@@ -63,6 +65,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
                 .values({
                     name: body.name,
                     description: body.description || null,
+                    logoUrl: body.logoUrl || null,
                     fakultasId: body.fakultasId,
                 })
                 .returning();
@@ -76,6 +79,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
             body: t.Object({
                 name: t.String({ minLength: 1 }),
                 description: t.Optional(t.String()),
+                logoUrl: t.Optional(t.String()),
                 fakultasId: t.String(),
             }),
         }
@@ -90,6 +94,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
             const updateData: any = {};
             if (body.name) updateData.name = body.name;
             if (body.description !== undefined) updateData.description = body.description;
+            if (body.logoUrl !== undefined) updateData.logoUrl = body.logoUrl;
             if (body.fakultasId) updateData.fakultasId = body.fakultasId;
 
             const [updated] = await db
@@ -110,6 +115,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
             body: t.Object({
                 name: t.Optional(t.String()),
                 description: t.Optional(t.String()),
+                logoUrl: t.Optional(t.String()),
                 fakultasId: t.Optional(t.String()),
             }),
         }

@@ -24,8 +24,8 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
 
         let conditions: any[] = [];
 
-        // Data scoping: non-super-admins only see their own prodi
-        if (!user.permissions.includes("*")) {
+        // Data scoping: non-super-admins see their own prodi, BUT students can see all to support cross-prodi courses
+        if (!user.permissions.includes("*") && user.role !== "student") {
             conditions.push(eq(materials.prodiId, user.prodiId));
         } else if (query.prodiId) {
             conditions.push(eq(materials.prodiId, query.prodiId));

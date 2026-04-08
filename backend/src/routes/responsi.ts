@@ -1,23 +1,20 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { responsi, videos, prodi, mataKuliah } from "../db/schema";
-import { eq, and } from "drizzle-orm";
+import { responsi, videos, prodi, mataKuliah, users } from "../db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole, requirePermission, requireProdiAccessOrAdmin } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
 
 export const responsiRoutes = new Elysia({ prefix: "/responsi" })
-    .use(authMiddleware)
-
     // LIST
-    .get("/", async ({ query, user, set }: any) => {
-        requirePermission("responsi:view")({ user, set });
+    .get("/", async ({ query, set }: any) => {
         let conditions: any[] = [];
         if (query.prodiId) conditions.push(eq(responsi.prodiId, query.prodiId));
         if (query.mataKuliahId) conditions.push(eq(responsi.mataKuliahId, query.mataKuliahId));
         if (query.status) conditions.push(eq(responsi.status, query.status));
 
-        const result = await db
+        let queryBuilder = db
             .select({
                 id: responsi.id,
                 title: responsi.title,
@@ -29,6 +26,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                 meetingLink: responsi.meetingLink,
                 requestMaterialLink: responsi.requestMaterialLink,
                 communityLink: responsi.communityLink,
+                liveChatLink: responsi.liveChatLink,
                 status: responsi.status,
                 mataKuliahId: responsi.mataKuliahId,
                 mataKuliahName: mataKuliah.name,
@@ -40,15 +38,41 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
             .from(responsi)
             .leftJoin(prodi, eq(responsi.prodiId, prodi.id))
             .leftJoin(mataKuliah, eq(responsi.mataKuliahId, mataKuliah.id))
-            .where(conditions.length > 0 ? and(...conditions) : undefined)
-            .orderBy(responsi.scheduleDate);
+            .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+        // Apply Sorting and Limit dynamically
+        let result;
+        if (query.sort === "createdAt") {
+            const finalQuery = queryBuilder.orderBy(desc(responsi.createdAt));
+            if (query.limit) {
+                const limitVal = parseInt(query.limit);
+                if (!isNaN(limitVal)) {
+                    result = await finalQuery.limit(limitVal);
+                } else {
+                    result = await finalQuery;
+                }
+            } else {
+                result = await finalQuery;
+            }
+        } else {
+            const finalQuery = queryBuilder.orderBy(responsi.scheduleDate);
+            if (query.limit) {
+                const limitVal = parseInt(query.limit);
+                if (!isNaN(limitVal)) {
+                    result = await finalQuery.limit(limitVal);
+                } else {
+                    result = await finalQuery;
+                }
+            } else {
+                result = await finalQuery;
+            }
+        }
 
         return { success: true, data: result };
     })
 
     // GET BY ID
-    .get("/:id", async ({ params, set, user }: any) => {
-        requirePermission("responsi:view")({ user, set });
+    .get("/:id", async ({ params, set }: any) => {
         const [r] = await db
             .select({
                 id: responsi.id,
@@ -61,17 +85,20 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                 meetingLink: responsi.meetingLink,
                 requestMaterialLink: responsi.requestMaterialLink,
                 communityLink: responsi.communityLink,
+                liveChatLink: responsi.liveChatLink,
                 status: responsi.status,
                 mataKuliahId: responsi.mataKuliahId,
                 mataKuliahName: mataKuliah.name,
                 prodiId: responsi.prodiId,
                 prodiName: prodi.name,
+                uploaderName: users.name,
                 createdBy: responsi.createdBy,
                 createdAt: responsi.createdAt,
             })
             .from(responsi)
             .leftJoin(prodi, eq(responsi.prodiId, prodi.id))
             .leftJoin(mataKuliah, eq(responsi.mataKuliahId, mataKuliah.id))
+            .leftJoin(users, eq(responsi.createdBy, users.id))
             .where(eq(responsi.id, params.id))
             .limit(1);
 
@@ -83,6 +110,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
     })
 
     // CREATE (Admin / Super Admin)
+    .use(authMiddleware)
     .post(
         "/",
         async ({ user, body, set }: any) => {
@@ -111,6 +139,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                     meetingLink: body.meetingLink || null,
                     requestMaterialLink: body.requestMaterialLink || null,
                     communityLink: body.communityLink || null,
+                    liveChatLink: body.liveChatLink || null,
                     status: body.status || "upcoming",
                     mataKuliahId: body.mataKuliahId || null,
                     prodiId,
@@ -134,6 +163,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                 meetingLink: t.Optional(t.String()),
                 requestMaterialLink: t.Optional(t.String()),
                 communityLink: t.Optional(t.String()),
+                liveChatLink: t.Optional(t.String()),
                 status: t.Optional(
                     t.Union([
                         t.Literal("upcoming"),
@@ -179,6 +209,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
             if (body.meetingLink !== undefined) updateData.meetingLink = body.meetingLink;
             if (body.requestMaterialLink !== undefined) updateData.requestMaterialLink = body.requestMaterialLink;
             if (body.communityLink !== undefined) updateData.communityLink = body.communityLink;
+            if (body.liveChatLink !== undefined) updateData.liveChatLink = body.liveChatLink;
             if (body.mataKuliahId !== undefined) updateData.mataKuliahId = body.mataKuliahId;
             if (body.status) updateData.status = body.status;
 
@@ -202,6 +233,7 @@ export const responsiRoutes = new Elysia({ prefix: "/responsi" })
                 meetingLink: t.Optional(t.Nullable(t.String())),
                 requestMaterialLink: t.Optional(t.Nullable(t.String())),
                 communityLink: t.Optional(t.Nullable(t.String())),
+                liveChatLink: t.Optional(t.Nullable(t.String())),
                 status: t.Optional(
                     t.Union([
                         t.Literal("upcoming"),

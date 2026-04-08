@@ -49,6 +49,7 @@ export const prodi = pgTable("prodi", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
+    logoUrl: text("logo_url"),
     fakultasId: uuid("fakultas_id")
         .references(() => fakultas.id, { onDelete: "cascade" })
         .notNull(),
@@ -60,6 +61,7 @@ export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
+    nim: varchar("nim", { length: 50 }).unique(),
     passwordHash: varchar("password_hash", { length: 255 }).notNull(),
     roleId: uuid("role_id").references(() => roles.id, { onDelete: "set null" }),
     jabatan: varchar("jabatan", { length: 255 }),
@@ -72,7 +74,7 @@ export const users = pgTable("users", {
 export const mataKuliah = pgTable("mata_kuliah", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
-    code: varchar("code", { length: 50 }).notNull(),
+    coverUrl: text("cover_url"),
     prodiId: uuid("prodi_id")
         .references(() => prodi.id, { onDelete: "cascade" })
         .notNull(),
@@ -129,6 +131,7 @@ export const responsi = pgTable("responsi", {
     meetingLink: varchar("meeting_link", { length: 500 }),
     requestMaterialLink: varchar("request_material_link", { length: 500 }),
     communityLink: varchar("community_link", { length: 500 }),
+    liveChatLink: varchar("live_chat_link", { length: 500 }),
     status: responsiStatusEnum("status").notNull().default("upcoming"),
     mataKuliahId: uuid("mata_kuliah_id")
         .references(() => mataKuliah.id, { onDelete: "cascade" }),
@@ -203,4 +206,25 @@ export const bankSoal = pgTable("bank_soal", {
         .references(() => users.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Pins
+export const pinnedMataKuliah = pgTable("pinned_mata_kuliah", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+        .references(() => users.id, { onDelete: "cascade" })
+        .notNull(),
+    mataKuliahId: uuid("mata_kuliah_id")
+        .references(() => mataKuliah.id, { onDelete: "cascade" })
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// OTPs
+export const otps = pgTable("otps", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    identifier: varchar("identifier", { length: 255 }).notNull(),
+    otp: varchar("otp", { length: 6 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 });

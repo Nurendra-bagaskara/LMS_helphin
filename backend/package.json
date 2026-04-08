@@ -11,17 +11,21 @@
         "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
-        "elysia": "^1.2.0",
-        "@elysiajs/jwt": "^1.2.0",
-        "@elysiajs/cors": "^1.2.0",
         "@elysiajs/bearer": "^1.2.0",
+        "@elysiajs/cors": "^1.2.0",
+        "@elysiajs/jwt": "^1.2.0",
         "@elysiajs/static": "^1.2.0",
         "drizzle-orm": "^0.38.0",
+        "elysia": "^1.2.0",
+        "jose": "^6.2.2",
+        "nodemailer": "^8.0.4",
+        "pg": "^8.20.0",
         "postgres": "^3.4.0"
     },
     "devDependencies": {
-        "drizzle-kit": "^0.30.0",
         "@types/bun": "latest",
+        "@types/nodemailer": "^8.0.0",
+        "drizzle-kit": "^0.30.0",
         "typescript": "^5.0.0"
     }
 }

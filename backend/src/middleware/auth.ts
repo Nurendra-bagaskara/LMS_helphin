@@ -28,6 +28,7 @@ export const authMiddleware = (app: Elysia) =>
                 role: roles.code,
                 roleId: users.roleId,
                 prodiId: users.prodiId,
+                nim: users.nim,
                 permissions: roles.permissions,
             })
             .from(users)

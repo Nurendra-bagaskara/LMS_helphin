@@ -1,17 +1,18 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { users, roles } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { users, roles, otps } from "../db/schema";
+import { eq, or, and, desc } from "drizzle-orm";
 import { logActivity } from "../utils/logger";
+import { sendOTP } from "../utils/mailer";
 
 export const authRoutes = new Elysia({ prefix: "/auth" })
     // ==================== REGISTER (Student) ====================
     .post(
         "/register",
         async ({ body, set, jwt }: any) => {
-            const { name, email, password, prodiId } = body;
+            const { name, email, password, prodiId, nim } = body;
 
-            // Check if email already exists
+            // Check if email or nim already exists
             const [existing] = await db
                 .select()
                 .from(users)
@@ -21,6 +22,19 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
             if (existing) {
                 set.status = 409;
                 return { success: false, message: "Email already registered" };
+            }
+
+            if (nim) {
+                const [existingNim] = await db
+                    .select()
+                    .from(users)
+                    .where(eq(users.nim, nim))
+                    .limit(1);
+
+                if (existingNim) {
+                    set.status = 409;
+                    return { success: false, message: "NIM already registered" };
+                }
             }
 
             const passwordHash = await Bun.password.hash(password, {
@@ -36,6 +50,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
                 .values({
                     name,
                     email,
+                    nim: nim || null,
                     passwordHash,
                     roleId: studentRole?.id || null,
                     prodiId: prodiId || null,
@@ -86,6 +101,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
             body: t.Object({
                 name: t.String({ minLength: 1 }),
                 email: t.String({ format: "email" }),
+                nim: t.Optional(t.String()),
                 password: t.String({ minLength: 6 }),
                 prodiId: t.Optional(t.String()),
             }),
@@ -96,7 +112,10 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
     .post(
         "/login",
         async ({ body, set, jwt, request }: any) => {
-            const { email, password } = body;
+            const identity = (body.email || body.identifier || "").trim();
+            const { password } = body;
+
+            console.log(`[AUTH] Login attempt for: "${identity}"`);
 
             const [user] = await db
                 .select({
@@ -106,23 +125,32 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
                     role: roles.code,
                     permissions: roles.permissions,
                     prodiId: users.prodiId,
+                    nim: users.nim,
                     passwordHash: users.passwordHash,
                 })
                 .from(users)
                 .leftJoin(roles, eq(users.roleId, roles.id))
-                .where(eq(users.email, email))
+                .where(
+                    or(eq(users.email, identity), eq(users.nim, identity))
+                )
                 .limit(1);
 
             if (!user) {
+                console.log(`[AUTH] User "${identity}" NOT found in database.`);
                 set.status = 401;
                 return { success: false, message: "Invalid email or password" };
             }
 
+            console.log(`[AUTH] User found: ${user.email} (Role: ${user.role})`);
+
             const validPassword = await Bun.password.verify(password, user.passwordHash);
             if (!validPassword) {
+                console.log(`[AUTH] Password for "${identity}" is INVALID.`);
                 set.status = 401;
                 return { success: false, message: "Invalid email or password" };
             }
+
+            console.log(`[AUTH] Login SUCCESS for: ${user.email}`);
 
             const accessToken = await jwt.sign({
                 sub: user.id,
@@ -150,6 +178,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
                         role: user.role,
                         permissions: user.permissions,
                         prodiId: user.prodiId,
+                        nim: user.nim,
                     },
                     accessToken,
                     refreshToken,
@@ -158,7 +187,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         },
         {
             body: t.Object({
-                email: t.String({ format: "email" }),
+                email: t.Optional(t.String({ format: "email" })),
+                identifier: t.Optional(t.String()), // Can be email or nim
                 password: t.String({ minLength: 1 }),
             }),
         }
@@ -238,6 +268,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
                 role: roles.code,
                 permissions: roles.permissions,
                 prodiId: users.prodiId,
+                nim: users.nim,
                 createdAt: users.createdAt,
             })
             .from(users)
@@ -251,4 +282,138 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         }
 
         return { success: true, data: user };
-    });
+    })
+    
+    // ==================== FORGOT PASSWORD (OTP) ====================
+    .post(
+        "/forgot-password",
+        async ({ body, set }: any) => {
+            const identifier = body.identifier.trim();
+
+            // 1. Check if user exists (Email or NIM)
+            const [user] = await db
+                .select()
+                .from(users)
+                .where(or(eq(users.email, identifier), eq(users.nim, identifier)))
+                .limit(1);
+
+            if (!user) {
+                set.status = 404;
+                return { success: false, message: "Email atau NIM tidak terdaftar" };
+            }
+
+            // 2. Generate 6-digit OTP
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+            // 3. Save OTP to DB
+            await db.insert(otps).values({
+                identifier: user.email, // Always store email for identifying OTP
+                otp,
+                expiresAt,
+            });
+
+            // 4. Send Email
+            await sendOTP(user.email, otp, user.name);
+
+            await logActivity(user.id, "forgot_password_request", "user", user.id);
+
+            return { 
+                success: true, 
+                message: "Kode OTP telah dikirim ke email terdaftar",
+                data: { email: user.email } // Frontend will need this for Next steps
+            };
+        },
+        {
+            body: t.Object({
+                identifier: t.String({ minLength: 1 }),
+            }),
+        }
+    )
+
+    // ==================== VERIFY OTP ====================
+    .post(
+        "/verify-otp",
+        async ({ body, set }: any) => {
+            const { email, otp } = body;
+
+            // Get the latest OTP for this email
+            const [record] = await db
+                .select()
+                .from(otps)
+                .where(and(eq(otps.identifier, email), eq(otps.otp, otp)))
+                .orderBy(desc(otps.createdAt))
+                .limit(1);
+
+            if (!record) {
+                set.status = 400;
+                return { success: false, message: "Kode OTP salah atau tidak ditemukan" };
+            }
+
+            if (new Date() > record.expiresAt) {
+                set.status = 400;
+                return { success: false, message: "Kode OTP telah kedaluwarsa" };
+            }
+
+            return { success: true, message: "OTP Valid" };
+        },
+        {
+            body: t.Object({
+                email: t.String({ format: "email" }),
+                otp: t.String({ length: 6 }),
+            }),
+        }
+    )
+
+    // ==================== RESET PASSWORD ====================
+    .post(
+        "/reset-password",
+        async ({ body, set }: any) => {
+            const { email, otp, newPassword } = body;
+
+            // 1. Re-verify OTP for security (prevent direct access to reset)
+            const [record] = await db
+                .select()
+                .from(otps)
+                .where(and(eq(otps.identifier, email), eq(otps.otp, otp)))
+                .orderBy(desc(otps.createdAt))
+                .limit(1);
+
+            if (!record || new Date() > record.expiresAt) {
+                set.status = 400;
+                return { success: false, message: "Sesi verifikasi tidak valid atau kedaluwarsa" };
+            }
+
+            // 2. Hash new password
+            const passwordHash = await Bun.password.hash(newPassword, {
+                algorithm: "bcrypt",
+                cost: 10,
+            });
+
+            // 3. Update User
+            const [updated] = await db
+                .update(users)
+                .set({ passwordHash, updatedAt: new Date() })
+                .where(eq(users.email, email))
+                .returning({ id: users.id });
+
+            if (!updated) {
+                set.status = 404;
+                return { success: false, message: "User tidak ditemukan" };
+            }
+
+            // 4. Delete used OTPs for this email
+            await db.delete(otps).where(eq(otps.identifier, email));
+
+            await logActivity(updated.id, "reset_password", "user", updated.id);
+
+            return { success: true, message: "Password berhasil diatur ulang. Silakan login kembali." };
+        },
+        {
+            body: t.Object({
+                email: t.String({ format: "email" }),
+                otp: t.String({ length: 6 }),
+                newPassword: t.String({ minLength: 6 }),
+            }),
+        }
+    );

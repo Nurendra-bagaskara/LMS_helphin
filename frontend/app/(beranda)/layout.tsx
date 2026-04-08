@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
-import { ChevronDown, ChevronRight, Bell, Moon } from "lucide-react";
+import { ChevronDown, ChevronRight, Bell, Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import SessionManager from "@/app/components/SessionManager";
+import { useTheme } from "../../context/ThemeContext";
 
 interface BerandaLayoutProps {
   children: ReactNode;
@@ -28,6 +29,8 @@ type MenuItem = {
 export default function BerandaLayout({ children }: BerandaLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
     "Manajemen Akun": true,
     "Manajemen Akademik": true,
@@ -39,6 +42,10 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
   const [userInitials, setUserInitials] = useState("?");
   const [userRole, setUserRole] = useState<string>("");
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -109,7 +116,7 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       name: "Dashboard",
       icon: "/Assets/icons/home-active-icon.svg",
       hasSubmenu: false,
-      path: "/dashboard",
+      path: "/superadmin/dashboard",
       permission: "dashboard:view",
     },
     {
@@ -118,8 +125,8 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       hasSubmenu: true,
       permission: "akun:view",
       submenu: [
-        { name: "Akun", path: "/manajemen/akun" },
-        { name: "Role", path: "/manajemen/role" },
+        { name: "Akun", path: "/superadmin/manajemen/akun" },
+        { name: "Role", path: "/superadmin/manajemen/role" },
       ],
     },
     {
@@ -128,9 +135,9 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       hasSubmenu: true,
       permission: "prodi:view",
       submenu: [
-        { name: "Fakultas", path: "/manajemen/fakultas" },
-        { name: "Prodi", path: "/manajemen/prodi" },
-        { name: "Mata Kuliah", path: "/manajemen/matkul" },
+        { name: "Fakultas", path: "/superadmin/manajemen/fakultas" },
+        { name: "Prodi", path: "/superadmin/manajemen/prodi" },
+        { name: "Mata Kuliah", path: "/superadmin/manajemen/matkul" },
       ],
     },
     {
@@ -139,32 +146,32 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       hasSubmenu: true,
       permission: "responsi:view",
       submenu: [
-        { name: "Responsi", path: "/manajemen/responsi" },
-        { name: "Materi", path: "/manajemen/materi" },
-        { name: "Video", path: "/manajemen/video" },
-        { name: "Latihan Soal", path: "/manajemen/latihan-soal" },
-        { name: "Request Materi", path: "/manajemen/request-materi" },
+        { name: "Responsi", path: "/superadmin/manajemen/responsi" },
+        { name: "Materi", path: "/superadmin/manajemen/materi" },
+        { name: "Video", path: "/superadmin/manajemen/video" },
+        { name: "Latihan Soal", path: "/superadmin/manajemen/latihan-soal" },
+        { name: "Request Materi", path: "/superadmin/manajemen/request-materi" },
       ],
     },
     {
       name: "Bank Soal",
       icon: "/Assets/icons/manajemen-icon.svg",
       hasSubmenu: false,
-      path: "/bank-soal",
+      path: "/superadmin/bank-soal",
       permission: "bank_soal:view",
     },
     {
       name: "Log Activity",
       icon: "/Assets/icons/log_activity-icon.svg",
       hasSubmenu: false,
-      path: "/log_activity",
+      path: "/superadmin/log_activity",
       permission: "log:view",
     },
     {
       name: "Setelan",
       icon: "/Assets/icons/setting-icon.svg",
       hasSubmenu: false,
-      path: "/setelan",
+      path: "/superadmin/setelan",
     },
   ];
 
@@ -173,14 +180,14 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       name: "Dashboard",
       icon: "/Assets/icons/home-active-icon.svg",
       hasSubmenu: false,
-      path: "/dashboard",
+      path: "/admin/dashboard",
       permission: "dashboard:view",
     },
     {
       name: "Mata Kuliah",
       icon: "/Assets/icons/manajemen-icon.svg",
       hasSubmenu: false,
-      path: "/mata-kuliah",
+      path: "/admin/mata-kuliah",
       permission: "materi:view",
     },
     {
@@ -188,23 +195,23 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
       icon: "/Assets/icons/manajemen-icon.svg",
       hasSubmenu: true,
       submenu: [
-        { name: "Materi", path: "/manajemen/materi" },
-        { name: "Video", path: "/manajemen/video" },
-        { name: "Responsi", path: "/manajemen/responsi" },
+        { name: "Materi", path: "/admin/manajemen/materi" },
+        { name: "Video", path: "/admin/manajemen/video" },
+        { name: "Responsi", path: "/admin/manajemen/responsi" },
       ],
     },
     {
       name: "Bank Soal",
       icon: "/Assets/icons/manajemen-icon.svg",
       hasSubmenu: false,
-      path: "/bank-soal",
+      path: "/admin/bank-soal",
       permission: "bank_soal:view",
     },
     {
       name: "Setelan",
       icon: "/Assets/icons/setting-icon.svg",
       hasSubmenu: false,
-      path: "/setelan",
+      path: "/admin/setelan",
     },
   ];
 
@@ -230,9 +237,9 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
 
   return (
     <SessionManager>
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-50 dark:bg-slate-950 transition-all duration-300">
         {/* Sidebar */}
-        <div className="w-55 bg-white shadow-lg flex flex-col border-r border-gray-100">
+        <div className="w-55 bg-white dark:bg-slate-900 shadow-lg flex flex-col border-r border-gray-100 dark:border-slate-800 transition-all duration-300">
           <div className="px-4 py-8">
             <Image
               src="/Assets/Logo-helphin-biru.png"
@@ -240,6 +247,7 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
               width={120}
               height={40}
               priority
+              className="dark:brightness-0 dark:invert"
             />
           </div>
 
@@ -255,8 +263,8 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                       onClick={() => toggleMenu(item.name)}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
                         activeParent
-                          ? "bg-blue-50 text-blue-600"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                          : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -266,6 +274,7 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                           width={20}
                           height={20}
                           priority
+                          className="dark:invert dark:opacity-70"
                         />
                         <span className="font-medium text-sm">{item.name}</span>
                       </div>
@@ -284,8 +293,8 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                             onClick={() => router.push(sub.path)}
                             className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
                               isActive(sub.path)
-                                ? "bg-blue-500 text-white font-medium"
-                                : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-blue-500 text-white font-medium shadow-md shadow-blue-500/20"
+                                : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800"
                             }`}
                           >
                             {sub.name}
@@ -303,8 +312,8 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                   onClick={() => item.path && router.push(item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
+                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   <Image
@@ -313,6 +322,7 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
                     width={20}
                     height={20}
                     priority
+                    className="dark:invert dark:opacity-70"
                   />
                   <span className="font-medium">{item.name}</span>
                 </button>
@@ -326,51 +336,57 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
           {/* Header */}
           <header className="bg-transparent px-8 pt-4 flex items-center justify-end">
             <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Moon size={20} className="text-gray-600" />
+              <button 
+                onClick={toggleTheme}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                {mounted && theme === "dark" ? (
+                  <Sun size={20} className="text-yellow-400" />
+                ) : (
+                  <Moon size={20} className="text-gray-600 dark:text-slate-400" />
+                )}
               </button>
 
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Bell size={20} className="text-gray-600" />
-                {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span> */}
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
+                <Bell size={20} className="text-gray-600 dark:text-slate-400" />
               </button>
 
               {/* Profile Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 >
-                  <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center shadow-lg shadow-orange-400/20">
                     <span className="text-white font-semibold">
                       {userInitials}
                     </span>
                   </div>
                   <div className="text-left hidden sm:block">
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-slate-200">
                       {userName}
                     </p>
-                    <p className="text-xs text-gray-500">{userEmail}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-500">{userEmail}</p>
                   </div>
-                  <ChevronDown size={18} className="text-gray-600" />
+                  <ChevronDown size={18} className="text-gray-600 dark:text-slate-500" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl py-1 z-50 border border-gray-100 dark:border-slate-800">
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
                         router.push("/profile");
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       Profil Saya
                     </button>
-                    <div className="border-t border-gray-100 my-1"></div>
+                    <div className="border-t border-gray-100 dark:border-slate-800 my-1"></div>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
                     >
                       Logout
                     </button>
@@ -381,7 +397,7 @@ export default function BerandaLayout({ children }: BerandaLayoutProps) {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 px-8 pb-8 overflow-auto">{children}</main>
+          <main className="flex-1 px-8 pb-8 overflow-auto bg-gray-50 dark:bg-slate-950 transition-colors duration-300">{children}</main>
         </div>
       </div>
     </SessionManager>

@@ -1,10 +1,13 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { videos, mataKuliah, prodi } from "../db/schema";
+import { videos, mataKuliah, prodi, users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requirePermission } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
+import { alias } from "drizzle-orm/pg-core";
+
+const uploader = alias(users, "uploader");
 
 // Helper: convert YouTube URL to embed ID (strip direct access)
 function extractYoutubeId(url: string): string | null {
@@ -21,6 +24,82 @@ function extractYoutubeId(url: string): string | null {
     return null;
 }
 
+// Helper: format milliseconds to MM:SS or HH:MM:SS
+function formatMillisToTime(millis: number): string {
+    const totalSeconds = Math.floor(millis / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}
+
+// Helper: fetch YouTube chapters by scraping the video page
+async function fetchYouTubeChapters(videoId: string): Promise<{ id: string; time: string; title: string; sortOrder: number }[]> {
+    try {
+        const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+        });
+        const html = await res.text();
+
+        // Method 1: Parse ytInitialData for chapter markers
+        const dataMatch = html.match(/var ytInitialData = (\{.*?\});<\/script>/);
+        if (dataMatch) {
+            try {
+                const data = JSON.parse(dataMatch[1]);
+                const markersMap = data?.playerOverlays?.playerOverlayRenderer?.decoratedPlayerBarRenderer?.decoratedPlayerBarRenderer?.playerBar?.multiMarkersPlayerBarRenderer?.markersMap;
+                
+                if (markersMap) {
+                    for (const map of markersMap) {
+                        if (map.key === "DESCRIPTION_CHAPTERS" || map.key === "MACRO_MARKERS_LIST" || map.key === "AUTO_CHAPTERS") {
+                            const chapters = map.value?.chapters || [];
+                            if (chapters.length > 0) {
+                                return chapters.map((c: any, idx: number) => ({
+                                    id: `yt-ch-${idx}`,
+                                    time: formatMillisToTime(c.chapterRenderer.timeRangeStartMillis),
+                                    title: c.chapterRenderer.title.simpleText,
+                                    sortOrder: idx,
+                                }));
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse ytInitialData chapters:", e);
+            }
+        }
+
+        // Method 2: Fall back to parsing description for timestamp patterns
+        const descMatch = html.match(/"shortDescription":"(.*?)"/);
+        if (descMatch) {
+            const desc = descMatch[1].replace(/\\n/g, "\n");
+            const regex = /(?:^|\n)(((\d{1,2}:)?\d{2}:\d{2}))\s+(.+)/g;
+            let match;
+            const chapters: { id: string; time: string; title: string; sortOrder: number }[] = [];
+            let idx = 0;
+            while ((match = regex.exec(desc)) !== null) {
+                chapters.push({
+                    id: `yt-desc-${idx}`,
+                    time: match[1],
+                    title: match[4].trim(),
+                    sortOrder: idx,
+                });
+                idx++;
+            }
+            if (chapters.length > 0) return chapters;
+        }
+
+        return [];
+    } catch (e) {
+        console.error("Failed to fetch YouTube chapters:", e);
+        return [];
+    }
+}
+
 export const videoRoutes = new Elysia({ prefix: "/videos" })
     .use(authMiddleware)
 
@@ -30,8 +109,8 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
 
         let conditions: any[] = [];
 
-        // Prodi-scoping: Non-super-admins can only see their own prodi videos
-        if (!user.permissions?.includes("*")) {
+        // Prodi-scoping: Non-super-admins see their own prodi, BUT students see all to support cross-prodi
+        if (!user.permissions?.includes("*") && user.role !== "student") {
             if (!user.prodiId) {
                 set.status = 403;
                 return { success: false, message: "User has no assigned prodi" };
@@ -57,11 +136,13 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
                 tahunAjaran: videos.tahunAjaran,
                 prodiId: videos.prodiId,
                 prodiName: prodi.name,
+                uploaderName: uploader.name,
                 createdAt: videos.createdAt,
             })
             .from(videos)
             .leftJoin(mataKuliah, eq(videos.mataKuliahId, mataKuliah.id))
             .leftJoin(prodi, eq(videos.prodiId, prodi.id))
+            .leftJoin(uploader, eq(videos.uploadedBy, uploader.id))
             .where(conditions.length > 0 ? and(...conditions) : undefined)
             .orderBy(videos.createdAt);
 
@@ -96,11 +177,13 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
                 tahunAjaran: videos.tahunAjaran,
                 prodiId: videos.prodiId,
                 prodiName: prodi.name,
+                uploaderName: uploader.name,
                 createdAt: videos.createdAt,
             })
             .from(videos)
             .leftJoin(mataKuliah, eq(videos.mataKuliahId, mataKuliah.id))
             .leftJoin(prodi, eq(videos.prodiId, prodi.id))
+            .leftJoin(uploader, eq(videos.uploadedBy, uploader.id))
             .where(eq(videos.id, params.id))
             .limit(1);
 
@@ -109,8 +192,8 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
             return { success: false, message: "Video not found" };
         }
 
-        // Access check
-        if (!user.permissions?.includes("*") && v.prodiId !== user.prodiId) {
+        // Access check: Admins can only see their own prodi videos, but students can see all for cross-prodi support
+        if (!user.permissions?.includes("*") && user.role !== "student" && v.prodiId !== user.prodiId) {
             set.status = 403;
             return { success: false, message: "Forbidden: Cannot access videos from other prodi" };
         }
@@ -265,4 +348,27 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
         await logActivity(user.id, "delete_video", "video", params.id);
 
         return { success: true, message: "Video deleted" };
+    })
+
+    // ==================== GET CHAPTERS (from YouTube) ====================
+    .get("/:id/chapters", async ({ params, set }: any) => {
+        // Fetch the video to get its YouTube URL
+        const [v] = await db
+            .select({ youtubeUrl: videos.youtubeUrl })
+            .from(videos)
+            .where(eq(videos.id, params.id))
+            .limit(1);
+
+        if (!v) {
+            set.status = 404;
+            return { success: false, message: "Video not found" };
+        }
+
+        const ytId = extractYoutubeId(v.youtubeUrl);
+        if (!ytId) {
+            return { success: true, data: [] };
+        }
+
+        const chapters = await fetchYouTubeChapters(ytId);
+        return { success: true, data: chapters };
     });
