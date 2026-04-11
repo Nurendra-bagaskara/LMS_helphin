@@ -5,6 +5,7 @@ import { eq, and, ilike } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole, requirePermission, requireProdiAccessOrAdmin } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
+import { cache, CACHE_TTL } from "../utils/cache";
 import { join } from "path";
 import { existsSync, mkdirSync, unlinkSync } from "fs";
 
@@ -35,6 +36,13 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
         if (query.tahunAjaran) conditions.push(eq(materials.tahunAjaran, query.tahunAjaran));
         if (query.search) conditions.push(ilike(materials.title, `%${query.search}%`));
 
+        // Only cache list without search filters  
+        const cacheKey = !query.search ? `materials:list:${user.prodiId || 'all'}:${query.mataKuliahId || 'all'}` : null;
+        if (cacheKey) {
+            const cached = cache.get(cacheKey);
+            if (cached) return cached;
+        }
+
         const result = await db
             .select({
                 id: materials.id,
@@ -56,7 +64,9 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
             .where(conditions.length > 0 ? and(...conditions) : undefined)
             .orderBy(materials.createdAt);
 
-        return { success: true, data: result };
+        const response = { success: true, data: result };
+        if (cacheKey) cache.set(cacheKey, response, CACHE_TTL.DASHBOARD);
+        return response;
     })
 
     // ==================== GET BY ID ====================
@@ -137,6 +147,8 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
             await logActivity(user.id, "upload_material", "material", created.id, {
                 title: body.title,
             });
+            cache.invalidate("materials");
+            cache.invalidate("matkul");
 
             set.status = 201;
             return { success: true, message: "Material uploaded", data: created };
@@ -188,6 +200,7 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
                 .returning();
 
             await logActivity(user.id, "update_material", "material", params.id);
+            cache.invalidate("materials");
             return { success: true, data: updated };
         },
         {
@@ -228,6 +241,8 @@ export const materialRoutes = new Elysia({ prefix: "/materials" })
 
         await db.delete(materials).where(eq(materials.id, params.id));
         await logActivity(user.id, "delete_material", "material", params.id);
+        cache.invalidate("materials");
+        cache.invalidate("matkul");
 
         return { success: true, message: "Material deleted" };
     })

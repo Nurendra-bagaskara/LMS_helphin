@@ -4,6 +4,7 @@ import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { join } from "path";
 import { existsSync } from "fs";
+import { cache } from "./utils/cache";
 
 // Routes
 import { authRoutes } from "./routes/auth";
@@ -94,6 +95,7 @@ const app = new Elysia()
     .get("/health", () => ({
         status: "ok",
         timestamp: new Date().toISOString(),
+        cacheSize: cache.size,
     }))
 
     // ==================== API ROUTES ====================

@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requirePermission } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
+import { cache, CACHE_TTL } from "../utils/cache";
 import { alias } from "drizzle-orm/pg-core";
 
 const uploader = alias(users, "uploader");
@@ -109,7 +110,7 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
 
         let conditions: any[] = [];
 
-        // Prodi-scoping: Non-super-admins see their own prodi, BUT students see all to support cross-prodi
+        // Prodi-scoping
         if (!user.permissions?.includes("*") && user.role !== "student") {
             if (!user.prodiId) {
                 set.status = 403;
@@ -123,6 +124,10 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
         if (query.type) conditions.push(eq(videos.type, query.type));
         if (query.mataKuliahId) conditions.push(eq(videos.mataKuliahId, query.mataKuliahId));
         if (query.tahunAjaran) conditions.push(eq(videos.tahunAjaran, query.tahunAjaran));
+
+        const cacheKey = `videos:list:${user.prodiId || 'all'}:${query.mataKuliahId || 'all'}:${query.type || 'all'}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
 
         const result = await db
             .select({
@@ -151,14 +156,16 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
             const embedId = extractYoutubeId(v.youtubeUrl);
             return {
                 ...v,
-                youtubeUrl: undefined, // hide raw URL
+                youtubeUrl: undefined,
                 embedUrl: embedId
                     ? `https://www.youtube.com/embed/${embedId}`
                     : null,
             };
         });
 
-        return { success: true, data: safeResult };
+        const response = { success: true, data: safeResult };
+        cache.set(cacheKey, response, CACHE_TTL.DASHBOARD);
+        return response;
     })
 
     // ==================== GET BY ID ====================
@@ -245,6 +252,8 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
             await logActivity(user.id, "create_video", "video", created.id, {
                 title: body.title,
             });
+            cache.invalidate("videos");
+            cache.invalidate("matkul");
 
             set.status = 201;
             return { success: true, data: created };
@@ -308,6 +317,7 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
                 .returning();
 
             await logActivity(user.id, "update_video", "video", params.id);
+            cache.invalidate("videos");
             return { success: true, data: updated };
         },
         {
@@ -346,6 +356,8 @@ export const videoRoutes = new Elysia({ prefix: "/videos" })
 
         await db.delete(videos).where(eq(videos.id, params.id));
         await logActivity(user.id, "delete_video", "video", params.id);
+        cache.invalidate("videos");
+        cache.invalidate("matkul");
 
         return { success: true, message: "Video deleted" };
     })

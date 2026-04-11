@@ -5,6 +5,7 @@ import { eq, count, sql, and } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole, requirePermission, requireProdiAccessOrAdmin } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
+import { cache, CACHE_TTL } from "../utils/cache";
 
 export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
     .use(authMiddleware)
@@ -22,6 +23,10 @@ export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
         } else if (!user.permissions.includes("*")) {
             conditions.push(eq(mataKuliah.prodiId, user.prodiId));
         }
+
+        const cacheKey = `matkul:list:${user.id}:${query.prodiId || 'default'}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
 
         console.log(`[MATKUL] Fetching for user: ${user.name} (Role: ${user.role}, Prodi: ${user.prodiId})`);
 
@@ -63,7 +68,9 @@ export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
 
         console.log(`[MATKUL] Result: Found ${result.length} Mata Kuliah records.`);
         
-        return { success: true, data: result };
+        const response = { success: true, data: result };
+        cache.set(cacheKey, response, CACHE_TTL.DASHBOARD);
+        return response;
     })
 
     // TOGGLE PIN - must be BEFORE /:id route to prevent route conflict
@@ -160,6 +167,7 @@ export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
                 .returning();
 
             await logActivity(user.id, "create_mata_kuliah", "mata_kuliah", created.id);
+            cache.invalidate("matkul");
 
             set.status = 201;
             return { success: true, data: created };
@@ -214,6 +222,7 @@ export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
                 .returning();
 
             await logActivity(user.id, "update_mata_kuliah", "mata_kuliah", params.id);
+            cache.invalidate("matkul");
             return { success: true, data: updated };
         },
         {
@@ -247,6 +256,7 @@ export const mataKuliahRoutes = new Elysia({ prefix: "/mata-kuliah" })
 
         await db.delete(mataKuliah).where(eq(mataKuliah.id, params.id));
         await logActivity(user.id, "delete_mata_kuliah", "mata_kuliah", params.id);
+        cache.invalidate("matkul");
 
         return { success: true, message: "Mata Kuliah deleted" };
     });

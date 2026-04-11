@@ -5,10 +5,15 @@ import { eq } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole, requirePermission } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
+import { cache, CACHE_TTL } from "../utils/cache";
 
 export const prodiRoutes = new Elysia({ prefix: "/prodi" })
     // LIST (with fakultas name) - PUBLIC for registration
     .get("/", async ({ query }: any) => {
+        const cacheKey = `prodi:list:${query.fakultasId || 'all'}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
+
         const result = await db
             .select({
                 id: prodi.id,
@@ -24,7 +29,9 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
             .leftJoin(fakultas, eq(prodi.fakultasId, fakultas.id))
             .where(query.fakultasId ? eq(prodi.fakultasId, query.fakultasId) : undefined);
 
-        return { success: true, data: result };
+        const response = { success: true, data: result };
+        cache.set(cacheKey, response, CACHE_TTL.MEDIUM);
+        return response;
     })
 
     .use(authMiddleware)
@@ -71,6 +78,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
                 .returning();
 
             await logActivity(user.id, "create_prodi", "prodi", created.id);
+            cache.invalidate("prodi");
 
             set.status = 201;
             return { success: true, data: created };
@@ -109,6 +117,7 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
             }
 
             await logActivity(user.id, "update_prodi", "prodi", params.id);
+            cache.invalidate("prodi");
             return { success: true, data: updated };
         },
         {
@@ -136,5 +145,6 @@ export const prodiRoutes = new Elysia({ prefix: "/prodi" })
         }
 
         await logActivity(user.id, "delete_prodi", "prodi", params.id);
+        cache.invalidate("prodi");
         return { success: true, message: "Prodi deleted" };
     });
