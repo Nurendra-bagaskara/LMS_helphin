@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import FooterDashboard from "@/components/dashboard/footer_dashboard";
 import { API_URL } from "@/lib/api";
@@ -43,6 +43,14 @@ const STATIC_VIDEOS: Record<string, SmartVideoData> = {
 };
 
 export default function SmartVideoPage() {
+    return (
+        <Suspense fallback={<div className="flex flex-col gap-6 mt-2"><div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse" /><div className="aspect-video bg-gray-200 rounded-2xl animate-pulse" /></div>}>
+            <SmartVideoPageContent />
+        </Suspense>
+    );
+}
+
+function SmartVideoPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const matkulId = searchParams.get("matkulId") ?? "";

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -7,6 +7,14 @@ import InputFakultas from "@/app/components/akun-fakultas/input-fakultas";
 import { API_URL } from "@/lib/api";
 
 export default function BuatResponsi() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" /></div>}>
+            <BuatResponsiContent />
+        </Suspense>
+    );
+}
+
+function BuatResponsiContent() {
     const [judulResponsi, setJudulResponsi] = useState("");
     const [namaPemateri, setNamaPemateri] = useState("");
     const [tanggal, setTanggal] = useState("");
