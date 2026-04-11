@@ -39,7 +39,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
             const passwordHash = await Bun.password.hash(password, {
                 algorithm: "bcrypt",
-                cost: 10,
+                cost: 8, // Reduced from 10 for faster registration on limited CPU
             });
 
             // Get student role ID
