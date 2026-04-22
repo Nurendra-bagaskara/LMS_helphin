@@ -1,5 +1,11 @@
-import React from "react";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "HelPhin LMS — Platform Pembelajaran Digital",
+  description: "Platform pembelajaran inovatif untuk mahasiswa. Akses materi, responsi, dan latihan soal secara online.",
+};
+
 export default function Home() {
   return redirect("/login");
 }
