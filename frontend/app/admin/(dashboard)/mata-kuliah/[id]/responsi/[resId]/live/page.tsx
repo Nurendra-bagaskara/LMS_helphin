@@ -119,12 +119,24 @@ export default function AdminLiveResponsiDetail() {
 
   // State untuk Twitch embed
   const [twitchChannel, setTwitchChannel] = useState<string | null>(null);
+  // State untuk Jitsi embed
+  const [jitsiRoom, setJitsiRoom] = useState<string | null>(null);
   // State untuk platform eksternal (Google Meet, Zoom, dll)
   const [externalMeetingUrl, setExternalMeetingUrl] = useState<string | null>(null);
   const [meetingPlatform, setMeetingPlatform] = useState<string>("");
 
   const loadYouTubeAPI = (url: string) => {
     if (!url) return;
+
+    // Cek apakah link Jitsi Meet
+    if (url.includes("meet.jit.si/") || url.includes("jit.si/")) {
+        const roomName = url.split(/jit\.si\//)[1]?.split("?")[0]?.split("#")[0];
+        if (roomName) {
+            setJitsiRoom(roomName);
+            setIsLoading(false);
+            return;
+        }
+    }
 
     // Cek apakah link Google Meet, Zoom, atau Teams
     if (url.includes("meet.google.com") || url.includes("zoom.us") || url.includes("teams.microsoft.com")) {
@@ -136,7 +148,7 @@ export default function AdminLiveResponsiDetail() {
         return;
     }
 
-    // Cek apakah link Twitch (twitch.tv/channel)
+    // Cek apakah link Twitch
     if (url.includes("twitch.tv/")) {
         const parts = url.split("twitch.tv/")[1]?.split("?")[0]?.split("/");
         const channel = parts?.[0];
@@ -158,7 +170,7 @@ export default function AdminLiveResponsiDetail() {
     }
 
     if (!videoId) {
-        setError("Format link tidak valid. Gunakan link YouTube, Twitch, atau Google Meet.");
+        setError("Format link tidak valid. Gunakan link YouTube, Twitch, Jitsi, atau Google Meet.");
         return;
     }
 
@@ -319,6 +331,86 @@ export default function AdminLiveResponsiDetail() {
             <ArrowLeft size={18} /> Kembali
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Jika Jitsi Meet — embed langsung di LMS
+  if (jitsiRoom && responsi) {
+    const jitsiConfig = [
+      'config.startWithAudioMuted=true',
+      'config.startWithVideoMuted=true',
+      'config.prejoinConfig.enabled=false',
+      'config.disableDeepLinking=true',
+      'config.hideConferenceSubject=true',
+      'config.notifications=[]',
+      'interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true',
+      'interfaceConfig.HIDE_INVITE_MORE_HEADER=true',
+      'interfaceConfig.MOBILE_APP_PROMO=false',
+    ].join('&');
+    const jitsiSrc = `https://meet.jit.si/${jitsiRoom}#${jitsiConfig}`;
+
+    return (
+      <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 ${inter.className} pb-10 flex flex-col transition-colors duration-300`}>
+        <header className="px-6 py-8 max-w-[1400px] mx-auto w-full">
+          <div className="flex flex-wrap items-center gap-2 mb-6 text-[10px] sm:text-xs font-black text-slate-400 tracking-widest uppercase">
+            <Link href="/admin/mata-kuliah" className="hover:text-red-500 transition-colors">Manajemen MK</Link>
+            <ChevronRight size={14} className="opacity-50" />
+            <Link href={`/admin/mata-kuliah/${courseId}`} className="hover:text-red-500 transition-colors">{responsi.mataKuliahName}</Link>
+            <ChevronRight size={14} className="opacity-50" />
+            <span className="text-red-500 font-extrabold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-md animate-pulse">Live Jitsi</span>
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <button onClick={() => router.back()} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-red-500 transition-all">
+              <ArrowLeft size={18} />
+            </button>
+            <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border border-red-200 dark:border-red-900/50">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              Admin Control — Jitsi Meet
+            </div>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tighter leading-none">
+            Responsi {responsi.mataKuliahName}
+          </h1>
+        </header>
+        <main className="px-6 flex-1 max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+          <div className="lg:col-span-8">
+            <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl ring-4 md:ring-8 ring-white dark:ring-slate-900 shadow-red-200/50 dark:shadow-none overflow-hidden">
+              <div className="relative aspect-video">
+                <iframe
+                  src={jitsiSrc}
+                  className="w-full h-full absolute inset-0"
+                  allow="camera;microphone;display-capture;autoplay"
+                  allowFullScreen
+                  style={{ border: 0 }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-slate-100 dark:border-slate-800 p-8 shadow-2xl shadow-slate-200/50 dark:shadow-none">
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-2"><Info size={20} className="text-red-500" /> Informasi Siaran</h3>
+              <div className="space-y-6">
+                {[
+                  { icon: <User />, label: "Pemateri", value: responsi.speaker || responsi.uploaderName || "Pemateri Prodi", color: "emerald text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" },
+                  { icon: <BookOpen />, label: "Mata Kuliah", value: responsi.mataKuliahName, color: "purple text-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30" },
+                  { icon: <Calendar />, label: "Tanggal", value: new Date(responsi.scheduleDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), color: "blue text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-4 rounded-[24px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${item.color}`}>
+                      {React.isValidElement(item.icon) ? React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 }) : item.icon}
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 opacity-70">{item.label}</div>
+                      <div className="text-base font-black text-slate-700 dark:text-slate-200">{item.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+        <div className="mt-auto px-6"><FooterDashboard /></div>
       </div>
     );
   }
