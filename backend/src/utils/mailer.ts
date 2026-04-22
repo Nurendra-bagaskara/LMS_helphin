@@ -10,6 +10,9 @@ export const sendOTP = async (email: string, otp: string, name: string) => {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 10000, // 10 detik timeout koneksi
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
     });
 
     // 2. Define the email content
@@ -65,6 +68,9 @@ export const sendSupportEmail = async (
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
     });
 
     const companyEmail = process.env.SUPPORT_EMAIL || process.env.SMTP_USER || "support@helphin-lms.com";

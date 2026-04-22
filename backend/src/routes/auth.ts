@@ -314,9 +314,18 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
             });
 
             // 4. Send Email
-            await sendOTP(user.email, otp, user.name);
+            const emailSent = await sendOTP(user.email, otp, user.name);
 
             await logActivity(user.id, "forgot_password_request", "user", user.id);
+
+            if (!emailSent) {
+                console.error(`[AUTH] Failed to send OTP email to ${user.email}`);
+                set.status = 500;
+                return { 
+                    success: false, 
+                    message: "Gagal mengirim email OTP. Silakan coba lagi nanti.",
+                };
+            }
 
             return { 
                 success: true, 
