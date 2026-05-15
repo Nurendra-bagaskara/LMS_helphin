@@ -29,6 +29,8 @@ async function migrate() {
                 "video:manage",
                 "exercise:view",
                 "exercise:manage",
+                "latihan:view",
+                "latihan:manage",
             ],
             student: ["dashboard:view", "responsi:view"]
         };

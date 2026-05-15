@@ -59,7 +59,7 @@ export default function ManajemenLatihanSoal() {
         }
     };
 
-    const canManage = permissions.includes("*") || permissions.includes("exercise:manage");
+    const canManage = permissions.includes("*") || permissions.includes("latihan:manage");
 
     const [searchTerm, setSearchTerm] = useState("");
 

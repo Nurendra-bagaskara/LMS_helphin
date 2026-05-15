@@ -39,6 +39,8 @@ export default function TambahRole() {
                 { label: "Kelola Video", key: "video:manage" },
                 { label: "Lihat Bank Soal", key: "bank_soal:view" },
                 { label: "Kelola Bank Soal", key: "bank_soal:manage" },
+                { label: "Lihat Latihan (Quiz)", key: "latihan:view" },
+                { label: "Kelola Latihan (Quiz)", key: "latihan:manage" },
             ]
         },
         { group: "Lainnya", perms: [{ label: "Lihat Log Aktivitas", key: "log:view" }] },

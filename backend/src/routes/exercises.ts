@@ -3,14 +3,15 @@ import { db } from "../db";
 import { exercises, mataKuliah, prodi, users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
-import { requireRole, requireProdiAccessOrAdmin } from "../middleware/rbac";
+import { requirePermission, requireProdiAccessOrAdmin } from "../middleware/rbac";
 import { logActivity } from "../utils/logger";
 
 export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
     .use(authMiddleware)
 
     // LIST
-    .get("/", async ({ query }: any) => {
+    .get("/", async ({ query, user, set }: any) => {
+        requirePermission("latihan:view")({ user, set });
         let conditions: any[] = [];
         if (query.prodiId) conditions.push(eq(exercises.prodiId, query.prodiId));
         if (query.mataKuliahId) conditions.push(eq(exercises.mataKuliahId, query.mataKuliahId));
@@ -76,7 +77,7 @@ export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
     .post(
         "/",
         async ({ user, body, set }: any) => {
-            requireRole("admin", "super_admin")({ user, set });
+            requirePermission("latihan:manage")({ user, set });
 
             const prodiId = body.prodiId || user.prodiId;
             if (!prodiId) {
@@ -125,7 +126,7 @@ export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
     .patch(
         "/:id",
         async ({ user, params, body, set }: any) => {
-            requireRole("admin", "super_admin")({ user, set });
+            requirePermission("latihan:manage")({ user, set });
 
             const [existing] = await db
                 .select()
@@ -174,7 +175,7 @@ export const exerciseRoutes = new Elysia({ prefix: "/exercises" })
 
     // DELETE
     .delete("/:id", async ({ user, params, set }: any) => {
-        requireRole("admin", "super_admin")({ user, set });
+        requirePermission("latihan:manage")({ user, set });
 
         const [existing] = await db
             .select()

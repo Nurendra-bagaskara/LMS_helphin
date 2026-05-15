@@ -7,7 +7,7 @@ async function seed() {
 
     // 1. Create Default Roles
     const [superAdminRole] = await db.insert(roles).values({ name: "Super Admin", code: "super_admin", permissions: ["*"] }).returning();
-    const [adminRole] = await db.insert(roles).values({ name: "Admin Prodi", code: "admin", permissions: ["dashboard:view", "prodi:view", "prodi:edit", "matkul:view", "matkul:manage", "materi:view", "materi:edit", "video:view", "video:edit", "responsi:view", "responsi:edit"] }).returning();
+    const [adminRole] = await db.insert(roles).values({ name: "Admin Prodi", code: "admin", permissions: ["dashboard:view", "prodi:view", "prodi:edit", "matkul:view", "matkul:manage", "materi:view", "materi:manage", "video:view", "video:manage", "responsi:view", "responsi:manage", "latihan:view", "latihan:manage"] }).returning();
     const [studentRole] = await db.insert(roles).values({ name: "Student", code: "student", permissions: ["dashboard:view", "matkul:view", "materi:view", "video:view", "responsi:view", "bank_soal:view"] }).returning();
     console.log("✅ Roles created");
 
